@@ -1,6 +1,7 @@
 package com.example.xabarsos.ui.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,7 +52,7 @@ fun QuickSosButtons(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(14.dp)
         ) {
             Text(
                 text = "⚡ TEZKOR SOS XABARI YUBORISH",
@@ -59,7 +61,7 @@ fun QuickSosButtons(
                 color = Color.White
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Main Requested Preset SOS Buttons: "SAIDBEK QARA" & "JASMINAHON QANI"
             Button(
@@ -71,22 +73,22 @@ fun QuickSosButtons(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
+                    .height(56.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = null,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(26.dp)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "🚨 SAIDBEK QARA",
-                    fontSize = 20.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.Black
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = { onSendSos("JASMINAHON QANI") },
@@ -97,31 +99,32 @@ fun QuickSosButtons(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
+                    .height(56.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = null,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(26.dp)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "🚨 JASMINAHON QANI",
-                    fontSize = 20.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.Black
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Custom Message Section
+            // Compact Custom Message Section (Kichikroq va ixcham)
             Text(
-                text = "Boshqa maxsus xabar yuborish:",
-                style = MaterialTheme.typography.bodySmall,
+                text = "Boshqa maxsus xabar yozish:",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -130,10 +133,19 @@ fun QuickSosButtons(
                 OutlinedTextField(
                     value = customMessage,
                     onValueChange = { customMessage = it },
-                    placeholder = { Text("Masa'lan: Men bu yerdaman!", color = Color.Gray) },
-                    modifier = Modifier.weight(1f),
+                    placeholder = {
+                        Text(
+                            text = "Xabaringizni yozing...",
+                            color = Color.Gray,
+                            fontSize = 13.sp
+                        )
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp),
                     shape = RoundedCornerShape(10.dp),
                     singleLine = true,
+                    textStyle = TextStyle(fontSize = 14.sp, color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color(0xFF121218),
                         unfocusedContainerColor = Color(0xFF121218),
@@ -155,16 +167,20 @@ fun QuickSosButtons(
                     },
                     enabled = customMessage.isNotBlank(),
                     shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = EmergencyRed,
                         disabledContainerColor = Color(0xFF333344)
                     ),
-                    modifier = Modifier.height(56.dp)
+                    modifier = Modifier
+                        .height(46.dp)
+                        .width(48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Yuborish",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
