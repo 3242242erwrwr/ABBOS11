@@ -1,6 +1,5 @@
 package com.example.xabarsos.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +19,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.xabarsos.ui.theme.DarkCardContainer
+import com.example.xabarsos.ui.theme.EmergencyPink
+import com.example.xabarsos.ui.theme.EmergencyRed
 
 @Composable
 fun QuickSosButtons(
@@ -42,7 +45,7 @@ fun QuickSosButtons(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = DarkCardContainer
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -53,7 +56,7 @@ fun QuickSosButtons(
                 text = "⚡ TEZKOR SOS XABARI YUBORISH",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = Color.White
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -62,7 +65,8 @@ fun QuickSosButtons(
             Button(
                 onClick = { onSendSos("SAIDBEK QARA") },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFD32F2F)
+                    containerColor = EmergencyRed,
+                    contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
@@ -87,7 +91,8 @@ fun QuickSosButtons(
             Button(
                 onClick = { onSendSos("JASMINAHON QANI") },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFC2185B)
+                    containerColor = EmergencyPink,
+                    contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
@@ -125,10 +130,18 @@ fun QuickSosButtons(
                 OutlinedTextField(
                     value = customMessage,
                     onValueChange = { customMessage = it },
-                    placeholder = { Text("Masa'lan: Men bu yerdaman!") },
+                    placeholder = { Text("Masa'lan: Men bu yerdaman!", color = Color.Gray) },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF121218),
+                        unfocusedContainerColor = Color(0xFF121218),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = EmergencyRed,
+                        unfocusedBorderColor = Color(0xFF333344)
+                    )
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -143,13 +156,15 @@ fun QuickSosButtons(
                     enabled = customMessage.isNotBlank(),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = EmergencyRed,
+                        disabledContainerColor = Color(0xFF333344)
                     ),
                     modifier = Modifier.height(56.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Yuborish"
+                        contentDescription = "Yuborish",
+                        tint = Color.White
                     )
                 }
             }

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
@@ -32,8 +31,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -57,6 +56,11 @@ import com.example.xabarsos.ui.SosViewModel
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
+import com.example.xabarsos.ui.theme.DarkBackground
+import com.example.xabarsos.ui.theme.DarkCardContainer
+import com.example.xabarsos.ui.theme.EmergencyRed
+import com.example.xabarsos.ui.theme.NeonGreen
+import com.example.xabarsos.ui.theme.NeonOrange
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -76,34 +80,36 @@ fun SosHomeScreen(
     var showSettingsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = DarkBackground,
         topBar = {
             TopAppBar(
                 title = {
                     Column {
                         Text(
-                            text = "XABAR SOS",
+                            text = "🚨 XABAR SOS",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
+                            fontSize = 20.sp,
+                            color = Color.White
                         )
                         Text(
                             text = "Ismingiz: $userName",
                             fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            color = Color.LightGray
                         )
                     }
                 },
                 actions = {
                     // Internet Status Indicator Badge
                     val statusColor = when (connectionStatus) {
-                        is ConnectionStatus.Connected -> Color(0xFF4CAF50)
-                        is ConnectionStatus.Connecting -> Color(0xFFFF9800)
-                        else -> Color(0xFFE53935)
+                        is ConnectionStatus.Connected -> NeonGreen
+                        is ConnectionStatus.Connecting -> NeonOrange
+                        else -> EmergencyRed
                     }
                     Box(
                         modifier = Modifier
                             .padding(end = 4.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(statusColor.copy(alpha = 0.15f))
+                            .background(statusColor.copy(alpha = 0.2f))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -129,7 +135,7 @@ fun SosHomeScreen(
                         modifier = Modifier
                             .padding(end = 8.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF2196F3).copy(alpha = 0.15f))
+                            .background(Color(0xFF00B0FF).copy(alpha = 0.2f))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -137,13 +143,13 @@ fun SosHomeScreen(
                             Icon(
                                 imageVector = if (isScanningBluetooth) Icons.AutoMirrored.Filled.BluetoothSearching else Icons.Default.Bluetooth,
                                 contentDescription = null,
-                                tint = Color(0xFF2196F3),
+                                tint = Color(0xFF00B0FF),
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Blutuz",
-                                color = Color(0xFF2196F3),
+                                color = Color(0xFF00B0FF),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -154,12 +160,13 @@ fun SosHomeScreen(
                     IconButton(onClick = { showSettingsDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Sozlamalar"
+                            contentDescription = "Sozlamalar",
+                            tint = Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    containerColor = DarkCardContainer
                 )
             )
         }
@@ -188,7 +195,7 @@ fun SosHomeScreen(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                            containerColor = DarkCardContainer
                         ),
                         shape = RoundedCornerShape(14.dp)
                     ) {
@@ -201,22 +208,30 @@ fun SosHomeScreen(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = EmergencyRed,
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Sizning ismingiz:",
+                                    text = "Sizning ismingiz (Yuboruvchi):",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    color = Color.LightGray
                                 )
                                 OutlinedTextField(
                                     value = userName,
                                     onValueChange = { viewModel.updateUserName(it) },
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp)
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = Color(0xFF121218),
+                                        unfocusedContainerColor = Color(0xFF121218),
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedBorderColor = EmergencyRed,
+                                        unfocusedBorderColor = Color(0xFF333344)
+                                    )
                                 )
                             }
                         }
@@ -246,7 +261,8 @@ fun SosHomeScreen(
                         Text(
                             text = "📋 SOS XABARLAR TARIXI",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
 
                         if (messages.isNotEmpty()) {
@@ -254,7 +270,7 @@ fun SosHomeScreen(
                                 Icon(
                                     imageVector = Icons.Default.DeleteSweep,
                                     contentDescription = "Tarixni tozalash",
-                                    tint = MaterialTheme.colorScheme.error
+                                    tint = EmergencyRed
                                 )
                             }
                         }
@@ -270,14 +286,14 @@ fun SosHomeScreen(
                                 .fillMaxWidth()
                                 .padding(vertical = 12.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                containerColor = DarkCardContainer
                             )
                         ) {
                             Text(
                                 text = "Hozircha SOS xabarlar yo'q. Qizil tugmalardan birini bossangiz barcha qurilmalarga SOS boradi!",
                                 modifier = Modifier.padding(16.dp),
                                 fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color.Gray
                             )
                         }
                     }
@@ -310,12 +326,10 @@ fun SosMessageCard(message: SosMessage) {
     val formattedTime = timeFormat.format(Date(message.timestamp))
 
     val backgroundColor = if (message.isIncoming) {
-        Color(0xFFFFEBEE) // Soft red background for incoming SOS
+        Color(0xFF2C1418) // Dark deep red background for incoming emergency SOS
     } else {
-        MaterialTheme.colorScheme.surfaceVariant
+        DarkCardContainer
     }
-
-    val borderColor = if (message.isIncoming) Color(0xFFD32F2F) else Color.Gray
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -335,7 +349,7 @@ fun SosMessageCard(message: SosMessage) {
                     text = if (message.isIncoming) "📥 KELGAN SOS: ${message.senderName}" else "📤 YUBORILGAN SOS: Siz",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = if (message.isIncoming) Color(0xFFB71C1C) else MaterialTheme.colorScheme.primary
+                    color = if (message.isIncoming) Color(0xFFFF5252) else Color(0xFF00B0FF)
                 )
 
                 Text(
@@ -351,7 +365,7 @@ fun SosMessageCard(message: SosMessage) {
                 text = message.messageText,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
-                color = Color.Black
+                color = Color.White
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -365,7 +379,7 @@ fun SosMessageCard(message: SosMessage) {
                 Text(
                     text = "Tizim: $channelText",
                     fontSize = 12.sp,
-                    color = Color.DarkGray
+                    color = Color.LightGray
                 )
             }
         }

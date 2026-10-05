@@ -1,10 +1,5 @@
 package com.example.xabarsos.ui.components
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,13 +18,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,10 +42,10 @@ fun SosAlertBanner(
             .fillMaxWidth()
             .padding(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFD32F2F)
+            containerColor = Color(0xFFB71C1C) // Deep emergency red dark background
         ),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(8.dp)
+        elevation = CardDefaults.cardElevation(12.dp)
     ) {
         Column(
             modifier = Modifier
@@ -86,7 +76,7 @@ fun SosAlertBanner(
 
             Text(
                 text = sosMessage.messageText,
-                color = Color.Yellow,
+                color = Color(0xFFFFD54F), // Bright neon yellow text for high contrast
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center,
@@ -115,7 +105,7 @@ fun SosAlertBanner(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
-                    contentColor = Color(0xFFD32F2F)
+                    contentColor = Color(0xFFB71C1C)
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
