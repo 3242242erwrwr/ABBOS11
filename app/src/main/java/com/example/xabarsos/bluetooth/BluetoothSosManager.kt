@@ -101,7 +101,7 @@ class BluetoothSosManager(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    fun broadcastSosOffline(senderName: String, messageText: String) {
+    fun broadcastSosOffline(senderName: String, targetRecipient: String, messageText: String) {
         if (!isBluetoothEnabled()) return
 
         advertiser = bluetoothAdapter?.bluetoothLeAdvertiser
@@ -116,8 +116,8 @@ class BluetoothSosManager(private val context: Context) {
             .setConnectable(false)
             .build()
 
-        // Combine sender and message: "Sender:Message" truncated if needed for BLE payload
-        val payload = "$senderName:$messageText"
+        // Combine sender, target, and message: "Sender:Target:Message"
+        val payload = "$senderName:$targetRecipient:$messageText"
         val payloadBytes = payload.toByteArray(StandardCharsets.UTF_8)
 
         val data = AdvertiseData.Builder()
@@ -166,13 +166,15 @@ class BluetoothSosManager(private val context: Context) {
                 val serviceData = scanRecord.getServiceData(ParcelUuid(SERVICE_UUID)) ?: return@let
 
                 val fullDataStr = String(serviceData, StandardCharsets.UTF_8)
-                val parts = fullDataStr.split(":", limit = 2)
+                val parts = fullDataStr.split(":", limit = 3)
                 val sender = parts.getOrNull(0) ?: "Yaqindagi qurilma"
-                val text = parts.getOrNull(1) ?: "SOS!"
+                val target = if (parts.size >= 3) parts.getOrNull(1) ?: "BARCHAGA" else "BARCHAGA"
+                val text = if (parts.size >= 3) parts.getOrNull(2) ?: "SOS!" else parts.getOrNull(1) ?: "SOS!"
 
                 val message = SosMessage(
                     senderName = sender,
                     messageText = text,
+                    targetRecipient = target,
                     channel = MessageChannel.BLUETOOTH,
                     isIncoming = true
                 )

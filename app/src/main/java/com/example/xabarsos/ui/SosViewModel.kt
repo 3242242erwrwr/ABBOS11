@@ -20,9 +20,9 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val connectionStatus: StateFlow<ConnectionStatus> = repository.webSocketManager.connectionStatus
     val isScanningBluetooth: StateFlow<Boolean> = repository.bluetoothManager.isScanning
 
-    fun sendSos(text: String) {
+    fun sendSos(text: String, targetRecipient: String = "BARCHAGA") {
         if (text.isNotBlank()) {
-            repository.sendSos(text)
+            repository.sendSos(text, targetRecipient)
         }
     }
 

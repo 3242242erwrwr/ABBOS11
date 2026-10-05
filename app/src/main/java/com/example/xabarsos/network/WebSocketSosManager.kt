@@ -92,6 +92,7 @@ class WebSocketSosManager(
                         id = messageObj.get("id")?.asString ?: java.util.UUID.randomUUID().toString(),
                         senderName = messageObj.get("senderName")?.asString ?: "Noma'lum",
                         messageText = messageObj.get("messageText")?.asString ?: "SOS!",
+                        targetRecipient = messageObj.get("targetRecipient")?.asString ?: "BARCHAGA",
                         timestamp = messageObj.get("timestamp")?.asLong ?: System.currentTimeMillis(),
                         channel = MessageChannel.INTERNET,
                         isIncoming = true
@@ -142,6 +143,7 @@ class WebSocketSosManager(
                 "id" to message.id,
                 "senderName" to message.senderName,
                 "messageText" to message.messageText,
+                "targetRecipient" to message.targetRecipient,
                 "timestamp" to message.timestamp
             )
         )

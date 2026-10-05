@@ -246,8 +246,8 @@ fun SosHomeScreen(
                 // Preset Emergency SOS Buttons: "SAIDBEK QARA" & "JASMINAHON QANI"
                 item {
                     QuickSosButtons(
-                        onSendSos = { sosText ->
-                            viewModel.sendSos(sosText)
+                        onSendSos = { sosText, targetRecipient ->
+                            viewModel.sendSos(sosText, targetRecipient)
                         }
                     )
 
@@ -381,16 +381,27 @@ fun SosMessageCard(message: SosMessage) {
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 val channelText = when (message.channel) {
-                    MessageChannel.INTERNET -> "🌐 Internet (Wi-Fi/4G)"
-                    MessageChannel.BLUETOOTH -> "📡 Blutuz (Oflayn Mesh)"
+                    MessageChannel.INTERNET -> "🌐 Internet"
+                    MessageChannel.BLUETOOTH -> "📡 Blutuz"
                     MessageChannel.LOCAL -> "📱 Mahalliy"
                 }
                 Text(
                     text = "Tizim: $channelText",
                     fontSize = 12.sp,
                     color = Color.LightGray
+                )
+
+                Text(
+                    text = "🎯 Kimga: ${message.targetRecipient}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFFD54F)
                 )
             }
         }

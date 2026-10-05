@@ -12,6 +12,7 @@ data class SosMessage(
     val id: String = UUID.randomUUID().toString(),
     val senderName: String,
     val messageText: String,
+    val targetRecipient: String = "BARCHAGA",
     val timestamp: Long = System.currentTimeMillis(),
     val channel: MessageChannel = MessageChannel.INTERNET,
     val isIncoming: Boolean = true,

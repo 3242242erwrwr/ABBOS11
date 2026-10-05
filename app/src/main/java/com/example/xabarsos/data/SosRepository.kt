@@ -51,16 +51,27 @@ class SosRepository(private val context: Context) {
     }
 
     private fun onNewSosReceived(sosMessage: SosMessage) {
-        // Add to history list
         val currentList = _messages.value.toMutableList()
         if (currentList.none { it.id == sosMessage.id }) {
             currentList.add(0, sosMessage)
             _messages.value = currentList
 
-            // Trigger alarm sound and vibration if it's incoming
+            // Check if this incoming SOS message is targeted to me or to EVERYONE
             if (sosMessage.isIncoming) {
-                _activeIncomingAlert.value = sosMessage
-                alertManager.playAlertSoundAndVibrate(_soundType.value)
+                val myName = getUserName().trim()
+                val target = sosMessage.targetRecipient.trim()
+
+                val isForMe = target.equals("BARCHAGA", ignoreCase = true)
+                        || target.equals("ALL", ignoreCase = true)
+                        || target.isEmpty()
+                        || target.equals(myName, ignoreCase = true)
+                        || myName.contains(target, ignoreCase = true)
+                        || target.contains(myName, ignoreCase = true)
+
+                if (isForMe) {
+                    _activeIncomingAlert.value = sosMessage
+                    alertManager.playAlertSoundAndVibrate(_soundType.value)
+                }
             }
         }
     }
@@ -70,11 +81,14 @@ class SosRepository(private val context: Context) {
         alertManager.stopAlertSoundAndVibrate()
     }
 
-    fun sendSos(messageText: String) {
+    fun sendSos(messageText: String, targetRecipient: String = "BARCHAGA") {
         val currentSender = getUserName()
+        val formattedTarget = targetRecipient.trim().ifEmpty { "BARCHAGA" }
+
         val sosMessage = SosMessage(
             senderName = currentSender,
             messageText = messageText,
+            targetRecipient = formattedTarget,
             channel = MessageChannel.INTERNET,
             isIncoming = false
         )
@@ -88,7 +102,7 @@ class SosRepository(private val context: Context) {
         webSocketManager.sendSosMessage(sosMessage)
 
         // 3. Broadcast via Bluetooth LE (Offline local mesh)
-        bluetoothManager.broadcastSosOffline(currentSender, messageText)
+        bluetoothManager.broadcastSosOffline(currentSender, formattedTarget, messageText)
     }
 
     fun saveUserName(name: String) {

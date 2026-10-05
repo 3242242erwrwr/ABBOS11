@@ -86,9 +86,9 @@ fun SosAlertBanner(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Yuboruvchi: ${sosMessage.senderName}",
+                text = "Yuboruvchi: ${sosMessage.senderName} | Kimga: ${sosMessage.targetRecipient}",
                 color = Color.White,
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Medium
             )
 
