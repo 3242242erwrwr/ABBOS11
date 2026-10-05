@@ -53,6 +53,20 @@ fun QuickSosButtons(
 ) {
     var customMessage by remember { mutableStateOf("") }
     var selectedRecipient by remember { mutableStateOf("BARCHAGA") }
+    var previousListSize by remember { mutableStateOf(friendsList.size) }
+
+    // Auto-select newly added friend when friendsList grows
+    if (friendsList.size > previousListSize) {
+        friendsList.lastOrNull()?.let { newlyAdded ->
+            selectedRecipient = newlyAdded
+        }
+        previousListSize = friendsList.size
+    } else if (friendsList.size < previousListSize) {
+        previousListSize = friendsList.size
+        if (friendsList.none { it.equals(selectedRecipient, ignoreCase = true) }) {
+            selectedRecipient = "BARCHAGA"
+        }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),

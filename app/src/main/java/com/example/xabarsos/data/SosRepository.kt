@@ -144,25 +144,32 @@ class SosRepository(private val context: Context) {
     }
 
     fun getFriendsList(): List<String> {
-        val savedSet = prefs.getStringSet("friends_set", null)
-        return savedSet?.toList()?.sorted() ?: emptyList()
+        val savedSet = prefs.getStringSet("friends_set", emptySet()) ?: emptySet()
+        return savedSet.toList().sorted()
     }
 
     fun addFriend(name: String) {
         val trimmed = name.trim()
         if (trimmed.isNotBlank()) {
-            val current = getFriendsList().toMutableSet()
-            current.add(trimmed)
-            prefs.edit().putStringSet("friends_set", current).apply()
-            _friendsList.value = current.toList().sorted()
+            val currentList = getFriendsList().toMutableList()
+            if (!currentList.contains(trimmed)) {
+                currentList.add(trimmed)
+            }
+            // SharedPreferences requires a NEW Set instance
+            val newSet = HashSet(currentList)
+            prefs.edit().remove("friends_set").apply() // Clear existing reference first
+            prefs.edit().putStringSet("friends_set", newSet).apply()
+            _friendsList.value = currentList.sorted()
         }
     }
 
     fun removeFriend(name: String) {
-        val current = getFriendsList().toMutableSet()
-        current.remove(name)
-        prefs.edit().putStringSet("friends_set", current).apply()
-        _friendsList.value = current.toList().sorted()
+        val currentList = getFriendsList().toMutableList()
+        currentList.remove(name)
+        val newSet = HashSet(currentList)
+        prefs.edit().remove("friends_set").apply()
+        prefs.edit().putStringSet("friends_set", newSet).apply()
+        _friendsList.value = currentList.sorted()
     }
 
     fun clearHistory() {
