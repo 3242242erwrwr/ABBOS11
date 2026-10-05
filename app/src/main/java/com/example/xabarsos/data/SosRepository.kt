@@ -34,6 +34,9 @@ class SosRepository(private val context: Context) {
     private val _soundType = MutableStateFlow(getSoundType())
     val soundType: StateFlow<SosSoundType> = _soundType.asStateFlow()
 
+    private val _friendsList = MutableStateFlow(getFriendsList())
+    val friendsList: StateFlow<List<String>> = _friendsList.asStateFlow()
+
     init {
         // Setup listener for WebSocket messages
         webSocketManager.setOnMessageReceivedListener { sosMessage ->
@@ -138,6 +141,28 @@ class SosRepository(private val context: Context) {
         } catch (e: Exception) {
             SosSoundType.ALARM
         }
+    }
+
+    fun getFriendsList(): List<String> {
+        val savedSet = prefs.getStringSet("friends_set", null)
+        return savedSet?.toList()?.sorted() ?: emptyList()
+    }
+
+    fun addFriend(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isNotBlank()) {
+            val current = getFriendsList().toMutableSet()
+            current.add(trimmed)
+            prefs.edit().putStringSet("friends_set", current).apply()
+            _friendsList.value = current.toList().sorted()
+        }
+    }
+
+    fun removeFriend(name: String) {
+        val current = getFriendsList().toMutableSet()
+        current.remove(name)
+        prefs.edit().putStringSet("friends_set", current).apply()
+        _friendsList.value = current.toList().sorted()
     }
 
     fun clearHistory() {

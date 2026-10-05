@@ -17,6 +17,7 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val userName: StateFlow<String> = repository.userName
     val serverUrl: StateFlow<String> = repository.serverUrl
     val soundType: StateFlow<SosSoundType> = repository.soundType
+    val friendsList: StateFlow<List<String>> = repository.friendsList
     val connectionStatus: StateFlow<ConnectionStatus> = repository.webSocketManager.connectionStatus
     val isScanningBluetooth: StateFlow<Boolean> = repository.bluetoothManager.isScanning
 
@@ -48,6 +49,14 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
 
     fun stopTestSound() {
         repository.alertManager.stopAlertSoundAndVibrate()
+    }
+
+    fun addFriend(name: String) {
+        repository.addFriend(name)
+    }
+
+    fun removeFriend(name: String) {
+        repository.removeFriend(name)
     }
 
     fun clearHistory() {

@@ -54,6 +54,7 @@ import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
 import com.example.xabarsos.ui.SosViewModel
+import com.example.xabarsos.ui.components.AddFriendDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
@@ -76,10 +77,12 @@ fun SosHomeScreen(
     val userName by viewModel.userName.collectAsState()
     val serverUrl by viewModel.serverUrl.collectAsState()
     val soundType by viewModel.soundType.collectAsState()
+    val friendsList by viewModel.friendsList.collectAsState()
     val connectionStatus by viewModel.connectionStatus.collectAsState()
     val isScanningBluetooth by viewModel.isScanningBluetooth.collectAsState()
 
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showAddFriendDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = DarkBackground,
@@ -243,9 +246,11 @@ fun SosHomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // Preset Emergency SOS Buttons: "SAIDBEK QARA" & "JASMINAHON QANI"
+                // Preset Emergency SOS Buttons & Friends Connection
                 item {
                     QuickSosButtons(
+                        friendsList = friendsList,
+                        onOpenAddFriendDialog = { showAddFriendDialog = true },
                         onSendSos = { sosText, targetRecipient ->
                             viewModel.sendSos(sosText, targetRecipient)
                         }
@@ -327,6 +332,15 @@ fun SosHomeScreen(
                 viewModel.stopTestSound()
             },
             onDismiss = { showSettingsDialog = false }
+        )
+    }
+
+    if (showAddFriendDialog) {
+        AddFriendDialog(
+            friendsList = friendsList,
+            onAddFriend = { name -> viewModel.addFriend(name) },
+            onRemoveFriend = { name -> viewModel.removeFriend(name) },
+            onDismiss = { showAddFriendDialog = false }
         )
     }
 }
