@@ -74,6 +74,7 @@ fun SosHomeScreen(
     val activeAlert by viewModel.activeIncomingAlert.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val serverUrl by viewModel.serverUrl.collectAsState()
+    val soundType by viewModel.soundType.collectAsState()
     val connectionStatus by viewModel.connectionStatus.collectAsState()
     val isScanningBluetooth by viewModel.isScanningBluetooth.collectAsState()
 
@@ -311,9 +312,17 @@ fun SosHomeScreen(
         SettingsDialog(
             currentName = userName,
             currentServerUrl = serverUrl,
-            onSave = { newName, newUrl ->
+            currentSoundType = soundType,
+            onSave = { newName, newUrl, newSoundType ->
                 viewModel.updateUserName(newName)
                 viewModel.updateServerUrl(newUrl)
+                viewModel.updateSoundType(newSoundType)
+            },
+            onTestSound = { soundToTest ->
+                viewModel.testSound(soundToTest)
+            },
+            onStopTestSound = {
+                viewModel.stopTestSound()
             },
             onDismiss = { showSettingsDialog = false }
         )

@@ -2,10 +2,10 @@ package com.example.xabarsos.data
 
 import android.content.Context
 import com.example.xabarsos.audio.SosAlertManager
+import com.example.xabarsos.audio.SosSoundType
 import com.example.xabarsos.bluetooth.BluetoothSosManager
 import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
-import com.example.xabarsos.network.ConnectionStatus
 import com.example.xabarsos.network.WebSocketSosManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +30,9 @@ class SosRepository(private val context: Context) {
 
     private val _serverUrl = MutableStateFlow(getServerUrl())
     val serverUrl: StateFlow<String> = _serverUrl.asStateFlow()
+
+    private val _soundType = MutableStateFlow(getSoundType())
+    val soundType: StateFlow<SosSoundType> = _soundType.asStateFlow()
 
     init {
         // Setup listener for WebSocket messages
@@ -57,7 +60,7 @@ class SosRepository(private val context: Context) {
             // Trigger alarm sound and vibration if it's incoming
             if (sosMessage.isIncoming) {
                 _activeIncomingAlert.value = sosMessage
-                alertManager.playAlertSoundAndVibrate()
+                alertManager.playAlertSoundAndVibrate(_soundType.value)
             }
         }
     }
@@ -107,6 +110,20 @@ class SosRepository(private val context: Context) {
 
     fun getServerUrl(): String {
         return prefs.getString("server_url", "https://xabar-sos.onrender.com") ?: "https://xabar-sos.onrender.com"
+    }
+
+    fun saveSoundType(type: SosSoundType) {
+        prefs.edit().putString("sound_type", type.name).apply()
+        _soundType.value = type
+    }
+
+    fun getSoundType(): SosSoundType {
+        val savedName = prefs.getString("sound_type", SosSoundType.ALARM.name) ?: SosSoundType.ALARM.name
+        return try {
+            SosSoundType.valueOf(savedName)
+        } catch (e: Exception) {
+            SosSoundType.ALARM
+        }
     }
 
     fun clearHistory() {

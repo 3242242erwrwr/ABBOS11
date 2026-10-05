@@ -6,16 +6,25 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Build
-import android.os.CombinedVibration
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.os.VibrationEffect
 import android.util.Log
 
+enum class SosSoundType(val displayName: String, val ringtoneType: Int) {
+    ALARM("🚨 Sirena / Budilnik (Baland)", RingtoneManager.TYPE_ALARM),
+    RINGTONE("📞 Qo'ng'iroq Ovozi (Ringtone)", RingtoneManager.TYPE_RINGTONE),
+    NOTIFICATION("🔔 Bildirishnoma (Notification)", RingtoneManager.TYPE_NOTIFICATION)
+}
+
 class SosAlertManager(private val context: Context) {
 
     private var mediaPlayer: MediaPlayer? = null
     private var isRinging = false
+
+    private val audioManager by lazy {
+        context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    }
 
     @Suppress("DEPRECATION")
     private val vibrator: Vibrator? by lazy {
@@ -27,15 +36,26 @@ class SosAlertManager(private val context: Context) {
         }
     }
 
-    fun playAlertSoundAndVibrate() {
+    fun playAlertSoundAndVibrate(soundType: SosSoundType = SosSoundType.ALARM) {
         if (isRinging) return
         isRinging = true
 
+        // 1. AUTOMATICALLY MAXIMIZE VOLUME TO 100% FOR EMERGENCY SOS
         try {
-            // Alarm / Ringtone Sound
-            val alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
+
+            val maxMusicVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVolume, 0)
+        } catch (e: Exception) {
+            Log.e("SosAlertManager", "Error maximizing volume: ${e.message}")
+        }
+
+        try {
+            // Get selected sound URI
+            val alertUri = RingtoneManager.getDefaultUri(soundType.ringtoneType)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
 
             mediaPlayer?.release()
             mediaPlayer = MediaPlayer().apply {
@@ -59,7 +79,7 @@ class SosAlertManager(private val context: Context) {
             val pattern = longArrayOf(0, 500, 200, 500, 200, 800)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
-                    VibrationEffect.createWaveform(pattern, 0) // 0 means repeat indefinitely until stop
+                    VibrationEffect.createWaveform(pattern, 0)
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -68,6 +88,11 @@ class SosAlertManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e("SosAlertManager", "Error starting vibration: ${e.message}")
         }
+    }
+
+    fun testSound(soundType: SosSoundType) {
+        stopAlertSoundAndVibrate()
+        playAlertSoundAndVibrate(soundType)
     }
 
     fun stopAlertSoundAndVibrate() {

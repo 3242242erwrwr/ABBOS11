@@ -2,13 +2,11 @@ package com.example.xabarsos.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
+import com.example.xabarsos.audio.SosSoundType
 import com.example.xabarsos.data.SosRepository
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 
 class SosViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -18,6 +16,7 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val activeIncomingAlert: StateFlow<SosMessage?> = repository.activeIncomingAlert
     val userName: StateFlow<String> = repository.userName
     val serverUrl: StateFlow<String> = repository.serverUrl
+    val soundType: StateFlow<SosSoundType> = repository.soundType
     val connectionStatus: StateFlow<ConnectionStatus> = repository.webSocketManager.connectionStatus
     val isScanningBluetooth: StateFlow<Boolean> = repository.bluetoothManager.isScanning
 
@@ -37,6 +36,18 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateServerUrl(url: String) {
         repository.saveServerUrl(url)
+    }
+
+    fun updateSoundType(type: SosSoundType) {
+        repository.saveSoundType(type)
+    }
+
+    fun testSound(type: SosSoundType) {
+        repository.alertManager.testSound(type)
+    }
+
+    fun stopTestSound() {
+        repository.alertManager.stopAlertSoundAndVibrate()
     }
 
     fun clearHistory() {
