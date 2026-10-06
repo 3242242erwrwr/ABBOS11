@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Work
@@ -59,7 +58,7 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 @Composable
 fun QuickSosButtons(
     friendsList: List<String>,
-    onOpenAddFriendDialog: () -> Unit,
+    onOpenAddFriendDialog: () -> Unit = {},
     onSendSos: (text: String, recipient: String) -> Unit,
     onStopAllAlerts: () -> Unit = {}
 ) {
@@ -143,25 +142,6 @@ fun QuickSosButtons(
                         )
                     )
                 }
-
-                // ADD FRIEND BUTTON CHIP ("+ Do'st qo'shish")
-                FilterChip(
-                    selected = false,
-                    onClick = onOpenAddFriendDialog,
-                    label = { Text("➕ Do'st qo'shish", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.PersonAdd,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = Color(0xFFFF9100)
-                        )
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color(0xFF2C251E),
-                        labelColor = Color(0xFFFF9100)
-                    )
-                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
