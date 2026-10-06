@@ -49,6 +49,8 @@ import com.example.xabarsos.audio.CallState
 import com.example.xabarsos.ui.theme.DarkCardContainer
 import com.example.xabarsos.ui.theme.EmergencyRed
 
+import androidx.compose.material3.TextButton
+
 @Composable
 fun VoiceCallDialog(
     callState: CallState,
@@ -280,6 +282,20 @@ fun VoiceCallDialog(
                 }
             }
         },
-        confirmButton = {}
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (callState == CallState.INCOMING_RINGING || callState == CallState.OUTGOING_RINGING || callState == CallState.CONNECTED) {
+                        onRejectOrEndCall()
+                    }
+                }
+            ) {
+                Text(
+                    text = if (callState == CallState.CONNECTED) "🔴 TUGATISH" else "YOPISH",
+                    color = EmergencyRed,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
     )
 }
