@@ -478,15 +478,15 @@ fun QuickSosButtons(
                         Text(
                             text = "Xabaringizni yozing...",
                             color = Color.Gray,
-                            fontSize = 12.sp
+                            fontSize = 13.sp
                         )
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(44.dp),
-                    shape = RoundedCornerShape(8.dp),
+                        .height(52.dp),
+                    shape = RoundedCornerShape(10.dp),
                     singleLine = true,
-                    textStyle = TextStyle(fontSize = 13.sp, color = Color.White),
+                    textStyle = TextStyle(fontSize = 14.sp, color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color(0xFF121218),
                         unfocusedContainerColor = Color(0xFF121218),
@@ -507,21 +507,21 @@ fun QuickSosButtons(
                         }
                     },
                     enabled = customMessage.isNotBlank(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = EmergencyRed,
                         disabledContainerColor = Color(0xFF333344)
                     ),
                     modifier = Modifier
-                        .height(44.dp)
-                        .width(46.dp)
+                        .height(52.dp)
+                        .width(52.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Yuborish",
                         tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
