@@ -1,5 +1,7 @@
 package com.example.xabarsos.ui.screens
 
+import android.content.Context
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
-import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Settings
@@ -32,9 +33,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -48,6 +46,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,7 +62,6 @@ import com.example.xabarsos.ui.components.MessagesHistoryDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
-import com.example.xabarsos.ui.theme.DarkBackground
 import com.example.xabarsos.ui.theme.DarkCardContainer
 import com.example.xabarsos.ui.theme.EmergencyRed
 import com.example.xabarsos.ui.theme.NeonGreen
@@ -85,7 +84,7 @@ fun SosHomeScreen(
     val connectionStatus by viewModel.connectionStatus.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
-    val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", android.content.Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", Context.MODE_PRIVATE) }
     var showFirstLaunchAutoStart by remember {
         mutableStateOf(!prefs.getBoolean("autostart_dialog_shown", false))
     }
@@ -94,8 +93,16 @@ fun SosHomeScreen(
     var showAddFriendDialog by remember { mutableStateOf(false) }
     var showMessagesMenuDialog by remember { mutableStateOf(false) }
 
+    val backgroundGradient = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF0D101A),
+            Color(0xFF151928),
+            Color(0xFF090B12)
+        )
+    )
+
     Scaffold(
-        containerColor = DarkBackground,
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = {
@@ -145,12 +152,12 @@ fun SosHomeScreen(
                         }
                     }
 
-                    // Add Friend Badge in TopBar (Compact Size)
+                    // Add Friend Badge in TopBar (Compact Glassmorphism Size)
                     Box(
                         modifier = Modifier
                             .padding(end = 4.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFFF9100).copy(alpha = 0.2f))
+                            .background(Color(0xFFFF9100).copy(alpha = 0.25f))
                             .clickable { showAddFriendDialog = true }
                             .padding(horizontal = 6.dp, vertical = 3.dp),
                         contentAlignment = Alignment.Center
@@ -182,71 +189,101 @@ fun SosHomeScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DarkCardContainer
+                    containerColor = Color.Transparent
                 )
             )
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .imePadding()
+                .background(backgroundGradient)
         ) {
-            // Active Flashing SOS Alarm Banner
-            activeAlert?.let { alert ->
-                SosAlertBanner(
-                    sosMessage = alert,
-                    onDismiss = { viewModel.dismissActiveAlert() }
+            // Ambient glowing lights background
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFF00B0FF).copy(alpha = 0.18f), Color.Transparent),
+                        center = Offset(size.width * 0.85f, size.height * 0.25f),
+                        radius = size.width * 0.75f
+                    )
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFFFF3D00).copy(alpha = 0.14f), Color.Transparent),
+                        center = Offset(size.width * 0.15f, size.height * 0.75f),
+                        radius = size.width * 0.85f
+                    )
                 )
             }
 
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
+                    .padding(innerPadding)
+                    .imePadding()
             ) {
-                // Preset Emergency SOS Buttons & Friends Connection
-                item {
-                    QuickSosButtons(
-                        friendsList = friendsList,
-                        onOpenAddFriendDialog = { showAddFriendDialog = true },
-                        onSendSos = { sosText, targetRecipient ->
-                            viewModel.sendSos(sosText, targetRecipient)
-                        },
-                        onStopAllAlerts = {
-                            viewModel.dismissActiveAlert()
-                        }
+                // Active Flashing SOS Alarm Banner
+                activeAlert?.let { alert ->
+                    SosAlertBanner(
+                        sosMessage = alert,
+                        onDismiss = { viewModel.dismissActiveAlert() }
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // DEDICATED "XABARLAR MENYUSI" BUTTON CARD
-                item {
-                    Button(
-                        onClick = { showMessagesMenuDialog = true },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00B0FF),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp)
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 14.dp),
+                    contentPadding = PaddingValues(top = 10.dp, bottom = 24.dp)
+                ) {
+                    // Preset Emergency SOS Buttons & Friends Connection
+                    item {
+                        QuickSosButtons(
+                            friendsList = friendsList,
+                            onOpenAddFriendDialog = { showAddFriendDialog = true },
+                            onSendSos = { sosText, targetRecipient ->
+                                viewModel.sendSos(sosText, targetRecipient)
+                            },
+                            onStopAllAlerts = {
+                                viewModel.dismissActiveAlert()
+                            }
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (messages.isEmpty()) "📋 XABARLAR MENYUSI" else "📋 XABARLAR MENYUSI (${messages.size} TA XABAR)",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                    }
+
+                    // DEDICATED GLASSMORPHISM "XABARLAR MENYUSI" BUTTON CARD
+                    item {
+                        Button(
+                            onClick = { showMessagesMenuDialog = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF00B0FF).copy(alpha = 0.9f),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (messages.isEmpty()) "📋 XABARLAR MENYUSI" else "📋 XABARLAR MENYUSI (${messages.size} TA XABAR)",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -306,9 +343,9 @@ fun SosMessageCard(message: SosMessage) {
     val formattedTime = timeFormat.format(Date(message.timestamp))
 
     val backgroundColor = if (message.isIncoming) {
-        Color(0xFF2C1418) // Dark deep red background for incoming emergency SOS
+        Color(0xFF2C1418).copy(alpha = 0.85f)
     } else {
-        DarkCardContainer
+        DarkCardContainer.copy(alpha = 0.85f)
     }
 
     Card(

@@ -1,5 +1,6 @@
 package com.example.xabarsos.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.DoorFront
@@ -50,7 +52,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.xabarsos.ui.theme.DarkCardContainer
 import com.example.xabarsos.ui.theme.EmergencyPink
 import com.example.xabarsos.ui.theme.EmergencyRed
 
@@ -80,14 +81,19 @@ fun QuickSosButtons(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+                shape = RoundedCornerShape(20.dp)
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = DarkCardContainer
+            containerColor = Color(0xFF161B28).copy(alpha = 0.75f)
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(20.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(14.dp)
         ) {
             // HEADER: DO'STLAR BILAN ULANISH
             Row(
@@ -103,7 +109,7 @@ fun QuickSosButtons(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // DYNAMIC FRIENDS CHIPS
             FlowRow(
@@ -121,7 +127,7 @@ fun QuickSosButtons(
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = EmergencyRed,
                         selectedLabelColor = Color.White,
-                        containerColor = Color(0xFF22222E),
+                        containerColor = Color(0xFF22222E).copy(alpha = 0.8f),
                         labelColor = Color.LightGray
                     )
                 )
@@ -137,14 +143,14 @@ fun QuickSosButtons(
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF00B0FF),
                             selectedLabelColor = Color.White,
-                            containerColor = Color(0xFF22222E),
+                            containerColor = Color(0xFF22222E).copy(alpha = 0.8f),
                             labelColor = Color.LightGray
                         )
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // ROW 1: "SAIDBEK QARA" & "JASMINAHON QANI"
             Row(
@@ -154,11 +160,11 @@ fun QuickSosButtons(
                 Button(
                     onClick = { onSendSos("SAIDBEK QARA", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = EmergencyRed,
+                        containerColor = EmergencyRed.copy(alpha = 0.9f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp)
@@ -166,24 +172,30 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "🚨 SAIDBEK QARA",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
 
                 Button(
                     onClick = { onSendSos("JASMINAHON QANI", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = EmergencyPink,
+                        containerColor = EmergencyPink.copy(alpha = 0.9f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp)
@@ -191,13 +203,19 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "🚨 JASMINAHON QANI",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
@@ -212,10 +230,10 @@ fun QuickSosButtons(
                 Button(
                     onClick = { onSendSos("NIMA GAP?", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00B0FF),
+                        containerColor = Color(0xFF00B0FF).copy(alpha = 0.88f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -224,23 +242,29 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Chat,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "💬 NIMA GAP?",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
 
                 Button(
                     onClick = { onSendSos("ESHIKNI OCH", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFAB47BC),
+                        containerColor = Color(0xFFAB47BC).copy(alpha = 0.88f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -249,13 +273,19 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.DoorFront,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "🚪 ESHIKNI OCH",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
@@ -270,10 +300,10 @@ fun QuickSosButtons(
                 Button(
                     onClick = { onSendSos("REALDA NIMA GAP?", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF26A69A),
+                        containerColor = Color(0xFF26A69A).copy(alpha = 0.88f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -282,23 +312,29 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.ElectricBolt,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "⚡ REALDA NIMA GAP?",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
 
                 Button(
                     onClick = { onSendSos("UYGA KETYABMAN", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF7E57C2),
+                        containerColor = Color(0xFF7E57C2).copy(alpha = 0.88f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -307,13 +343,19 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.Home,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "🏠 UYGA KETYABMAN",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
@@ -328,10 +370,10 @@ fun QuickSosButtons(
                 Button(
                     onClick = { onSendSos("MASHINADA MUAMMO", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFF7043),
+                        containerColor = Color(0xFFFF7043).copy(alpha = 0.88f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -340,23 +382,29 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.DirectionsCar,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "🚗 MASHINADA MUAMMO",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
 
                 Button(
                     onClick = { onSendSos("TEL QIL YORDAM KERAK", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF66BB6A),
+                        containerColor = Color(0xFF66BB6A).copy(alpha = 0.88f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -365,13 +413,19 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.Phone,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "📞 TEL QIL YORDAM KERAK",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
@@ -386,10 +440,10 @@ fun QuickSosButtons(
                 Button(
                     onClick = { onSendSos("YIG'ILYAPMIZ KELILAR", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFA726),
+                        containerColor = Color(0xFFFFA726).copy(alpha = 0.9f),
                         contentColor = Color.Black
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -398,24 +452,31 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.Groups,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(16.dp),
                         tint = Color.Black
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "👥 YIG'ILYAPMIZ KELILAR",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = Color.Black
                     )
                 }
 
                 Button(
                     onClick = { onSendSos("ISHGA CHIQTINGMI?", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF42A5F5),
+                        containerColor = Color(0xFF42A5F5).copy(alpha = 0.88f),
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -424,13 +485,19 @@ fun QuickSosButtons(
                     Icon(
                         imageVector = Icons.Default.Work,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "💼 ISHGA CHIQTINGMI?",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
@@ -442,7 +509,7 @@ fun QuickSosButtons(
                 text = "Boshqa maxsus xabar yozish:",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.LightGray
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -463,8 +530,8 @@ fun QuickSosButtons(
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp)
-                        .background(Color(0xFF121218), RoundedCornerShape(10.dp))
-                        .border(1.dp, EmergencyRed, RoundedCornerShape(10.dp))
+                        .background(Color(0xFF121218).copy(alpha = 0.8f), RoundedCornerShape(10.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                         .padding(horizontal = 12.dp),
                     decorationBox = { innerTextField ->
                         Box(
