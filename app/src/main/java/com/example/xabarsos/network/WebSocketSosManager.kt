@@ -60,7 +60,7 @@ class WebSocketSosManager(
     private var onMessageReceivedListener: ((SosMessage) -> Unit)? = null
 
     init {
-        startConnectionWatcher()
+        connect()
     }
 
     fun setOnMessageReceivedListener(listener: (SosMessage) -> Unit) {
@@ -81,22 +81,9 @@ class WebSocketSosManager(
 
     fun getServerUrl(): String = serverBaseUrl
 
-    private fun startConnectionWatcher() {
-        scope.launch {
-            while (true) {
-                delay(1000) // Always ensure active connection
-                if (_connectionStatus.value !is ConnectionStatus.Connected || webSocket == null) {
-                    reconnect()
-                }
-            }
-        }
-    }
-
     @Synchronized
     fun connect() {
-        if (_connectionStatus.value == ConnectionStatus.Connected && webSocket != null) return
-
-        _connectionStatus.value = ConnectionStatus.Connecting
+        if (webSocket != null) return
 
         val wsUrl = serverBaseUrl
             .replace("https://", "wss://")
@@ -105,10 +92,6 @@ class WebSocketSosManager(
         val request = Request.Builder()
             .url(wsUrl)
             .build()
-
-        try {
-            webSocket?.cancel()
-        } catch (e: Exception) {}
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -147,13 +130,13 @@ class WebSocketSosManager(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e("WebSocketSosManager", "WebSocket Failure: ${t.message}")
-                _connectionStatus.value = ConnectionStatus.Disconnected
+                this@WebSocketSosManager.webSocket = null
                 scheduleReconnect()
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d("WebSocketSosManager", "WebSocket Closed: $reason")
-                _connectionStatus.value = ConnectionStatus.Disconnected
+                this@WebSocketSosManager.webSocket = null
                 scheduleReconnect()
             }
         })
@@ -161,8 +144,10 @@ class WebSocketSosManager(
 
     private fun scheduleReconnect() {
         scope.launch {
-            delay(500) // Fast 500ms auto-reconnect
-            reconnect()
+            delay(1000)
+            if (webSocket == null) {
+                connect()
+            }
         }
     }
 
@@ -179,7 +164,6 @@ class WebSocketSosManager(
             webSocket?.close(1000, "Normal closure")
         } catch (e: Exception) {}
         webSocket = null
-        _connectionStatus.value = ConnectionStatus.Disconnected
     }
 
     fun fetchRecentSosMessagesHttp(sinceTimestamp: Long, onResult: (List<SosMessage>) -> Unit) {
