@@ -33,20 +33,20 @@ sealed class ConnectionStatus {
 class WebSocketSosManager(
     private var serverBaseUrl: String = "https://xabar-sos.onrender.com"
 ) {
-    // Client for persistent WebSocket
+    // Client for persistent WebSocket with proper 4G LTE timeouts
     private val client = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
+        .connectTimeout(6, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS)
-        .writeTimeout(5, TimeUnit.SECONDS)
-        .pingInterval(3, TimeUnit.SECONDS) // Fast 3s Ping for 4G CGNAT NAT Keep-Alive
+        .writeTimeout(6, TimeUnit.SECONDS)
+        .pingInterval(4, TimeUnit.SECONDS) // Fast 4s Ping for 4G CGNAT NAT Keep-Alive
         .retryOnConnectionFailure(true)
         .build()
 
-    // Fast-client for instant HTTP REST requests & polling
+    // Client for HTTP REST requests & background polling on 4G
     private val fastHttpClient = OkHttpClient.Builder()
-        .connectTimeout(2, TimeUnit.SECONDS)
-        .readTimeout(2, TimeUnit.SECONDS)
-        .writeTimeout(2, TimeUnit.SECONDS)
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
+        .writeTimeout(5, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .build()
 
@@ -84,7 +84,7 @@ class WebSocketSosManager(
     private fun startConnectionWatcher() {
         scope.launch {
             while (true) {
-                delay(1500) // Every 1.5s verify connection is active
+                delay(2000) // Every 2s verify connection is active
                 if (_connectionStatus.value !is ConnectionStatus.Connected) {
                     connect()
                 }
@@ -225,26 +225,33 @@ class WebSocketSosManager(
             )
         )
 
-        // 1. Try WebSocket sending if connected
+        // 1. Send via WebSocket
         val wsSent = webSocket?.send(messageJson) == true
 
-        // 2. HTTP REST Broadcast fallback in background (using fastHttpClient)
+        // 2. ALWAYS Send via HTTP REST with up to 3 Retries on 4G LTE
         scope.launch {
-            try {
-                val httpUrl = "$serverBaseUrl/api/sos"
-                val body = messageJson.toRequestBody("application/json; charset=utf-8".toMediaType())
-                val request = Request.Builder()
-                    .url(httpUrl)
-                    .post(body)
-                    .build()
-                fastHttpClient.newCall(request).execute().use { response ->
-                    Log.d("WebSocketSosManager", "HTTP POST fallback result: ${response.code}")
-                    if (response.isSuccessful) {
-                        _connectionStatus.value = ConnectionStatus.Connected
+            var retries = 0
+            var success = false
+            while (retries < 3 && !success) {
+                try {
+                    val httpUrl = "$serverBaseUrl/api/sos"
+                    val body = messageJson.toRequestBody("application/json; charset=utf-8".toMediaType())
+                    val request = Request.Builder()
+                        .url(httpUrl)
+                        .post(body)
+                        .build()
+                    fastHttpClient.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            Log.d("WebSocketSosManager", "HTTP POST 4G broadcast succeeded on attempt ${retries + 1}")
+                            _connectionStatus.value = ConnectionStatus.Connected
+                            success = true
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.e("WebSocketSosManager", "HTTP POST 4G broadcast error attempt ${retries + 1}: ${e.message}")
+                    retries++
+                    delay(300) // Wait 300ms before retry
                 }
-            } catch (e: Exception) {
-                Log.e("WebSocketSosManager", "HTTP POST broadcast error: ${e.message}")
             }
         }
 
