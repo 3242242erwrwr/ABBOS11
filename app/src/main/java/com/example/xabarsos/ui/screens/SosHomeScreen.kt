@@ -3,7 +3,6 @@ package com.example.xabarsos.ui.screens
 import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
@@ -136,7 +134,7 @@ fun SosHomeScreen(
                     }
                     Box(
                         modifier = Modifier
-                            .padding(end = 4.dp)
+                            .padding(end = 8.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(statusColor.copy(alpha = 0.2f))
                             .padding(horizontal = 6.dp, vertical = 3.dp),
@@ -153,33 +151,6 @@ fun SosHomeScreen(
                             Text(
                                 text = if (connectionStatus is ConnectionStatus.Connected) "Internet" else "Oflayn",
                                 color = statusColor,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    // Add Friend Badge in TopBar (Compact Glassmorphism Size)
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFFF9100).copy(alpha = 0.25f))
-                            .clickable { showAddFriendDialog = true }
-                            .padding(horizontal = 6.dp, vertical = 3.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.PersonAdd,
-                                contentDescription = "Do'st qo'shish",
-                                tint = Color(0xFFFF9100),
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(
-                                text = "+ Do'st",
-                                color = Color(0xFFFF9100),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
