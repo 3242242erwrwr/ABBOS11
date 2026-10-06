@@ -59,21 +59,11 @@ class SosForegroundService : Service() {
     private val backgroundHeartbeatRunnable = object : Runnable {
         override fun run() {
             try {
-                // Briefly acquire WakeLock to force CPU execution even in Doze mode
-                val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-                @Suppress("DEPRECATION")
-                val tempWakeLock = powerManager.newWakeLock(
-                    PowerManager.PARTIAL_WAKE_LOCK,
-                    "XABARSOS::HeartbeatSyncLock"
-                )
-                tempWakeLock.acquire(1000) // Acquire WakeLock for 1s
-
                 repository?.webSocketManager?.connect()
-                triggerImmediateSync()
             } catch (e: Exception) {
                 Log.e("SosForegroundService", "Error in heartbeat: ${e.message}")
             } finally {
-                mainHandler.postDelayed(this, 1500) // Repeat every 1.5s
+                mainHandler.postDelayed(this, 15000) // Repeat every 20 seconds (efficient & battery friendly)
             }
         }
     }
