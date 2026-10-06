@@ -58,6 +58,7 @@ class WebSocketSosManager(
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
 
     private var onMessageReceivedListener: ((SosMessage) -> Unit)? = null
+    private var onCustomJsonReceivedListener: ((JsonObject) -> Unit)? = null
 
     init {
         connect()
@@ -65,6 +66,10 @@ class WebSocketSosManager(
 
     fun setOnMessageReceivedListener(listener: (SosMessage) -> Unit) {
         onMessageReceivedListener = listener
+    }
+
+    fun setOnCustomJsonReceivedListener(listener: (JsonObject) -> Unit) {
+        onCustomJsonReceivedListener = listener
     }
 
     fun updateServerUrl(url: String) {
@@ -104,6 +109,9 @@ class WebSocketSosManager(
                 _connectionStatus.value = ConnectionStatus.Connected
                 try {
                     val messageObj = gson.fromJson(text, JsonObject::class.java)
+
+                    // Forward custom json signal (voice calls, signaling)
+                    onCustomJsonReceivedListener?.invoke(messageObj)
 
                     // Skip server heartbeat ping frames
                     if (messageObj.has("type") && messageObj.get("type").asString == "ping") {
@@ -207,6 +215,11 @@ class WebSocketSosManager(
                 Log.e("WebSocketSosManager", "Error polling HTTP REST: ${e.message}")
             }
         }
+    }
+
+    fun sendCustomJson(data: Any): Boolean {
+        val jsonStr = gson.toJson(data)
+        return webSocket?.send(jsonStr) == true
     }
 
     fun sendSosMessage(message: SosMessage): Boolean {

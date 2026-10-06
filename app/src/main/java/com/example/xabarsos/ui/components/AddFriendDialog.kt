@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -52,6 +53,7 @@ fun AddFriendDialog(
     friendsList: List<String>,
     selectedRecipient: String = "BARCHAGA",
     onSelectRecipient: (String) -> Unit = {},
+    onStartVoiceCall: (String) -> Unit = {},
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (String) -> Unit,
     onDismiss: () -> Unit
@@ -284,21 +286,38 @@ fun AddFriendDialog(
                                         )
                                     }
 
-                                    IconButton(
-                                        onClick = {
-                                            if (selectedRecipient.equals(friend, ignoreCase = true)) {
-                                                onSelectRecipient("BARCHAGA")
-                                            }
-                                            onRemoveFriend(friend)
-                                        },
-                                        modifier = Modifier.size(28.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "O'chirish",
-                                            tint = EmergencyRed,
-                                            modifier = Modifier.size(18.dp)
-                                        )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        IconButton(
+                                            onClick = {
+                                                onDismiss()
+                                                onStartVoiceCall(friend)
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.PhoneInTalk,
+                                                contentDescription = "Ovozli Qo'ng'iroq",
+                                                tint = Color(0xFF00E676),
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+
+                                        IconButton(
+                                            onClick = {
+                                                if (selectedRecipient.equals(friend, ignoreCase = true)) {
+                                                    onSelectRecipient("BARCHAGA")
+                                                }
+                                                onRemoveFriend(friend)
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "O'chirish",
+                                                tint = EmergencyRed,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }

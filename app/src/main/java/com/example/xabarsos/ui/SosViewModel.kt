@@ -2,6 +2,8 @@ package com.example.xabarsos.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.example.xabarsos.audio.CallSession
+import com.example.xabarsos.audio.CallState
 import com.example.xabarsos.audio.SosSoundType
 import com.example.xabarsos.data.SosRepository
 import com.example.xabarsos.model.SosMessage
@@ -20,6 +22,32 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val friendsList: StateFlow<List<String>> = repository.friendsList
     val connectionStatus: StateFlow<ConnectionStatus> = repository.webSocketManager.connectionStatus
     val isScanningBluetooth: StateFlow<Boolean> = repository.bluetoothManager.isScanning
+
+    val callState: StateFlow<CallState> = repository.voiceCallManager.callState
+    val currentCallSession: StateFlow<CallSession?> = repository.voiceCallManager.currentSession
+    val isMuted: StateFlow<Boolean> = repository.voiceCallManager.isMuted
+    val isSpeakerOn: StateFlow<Boolean> = repository.voiceCallManager.isSpeakerOn
+    val callDurationSeconds: StateFlow<Int> = repository.voiceCallManager.callDurationSeconds
+
+    fun startVoiceCall(peerName: String, peerDeviceId: String = "") {
+        repository.startVoiceCall(peerName, peerDeviceId)
+    }
+
+    fun acceptVoiceCall() {
+        repository.acceptVoiceCall()
+    }
+
+    fun rejectOrEndVoiceCall() {
+        repository.rejectOrEndVoiceCall()
+    }
+
+    fun toggleMute() {
+        repository.voiceCallManager.toggleMute()
+    }
+
+    fun toggleSpeaker() {
+        repository.voiceCallManager.toggleSpeaker()
+    }
 
     fun sendSos(text: String, targetRecipient: String = "BARCHAGA") {
         if (text.isNotBlank()) {

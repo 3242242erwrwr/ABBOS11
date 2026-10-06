@@ -3,6 +3,7 @@ package com.example.xabarsos.data
 import android.content.Context
 import com.example.xabarsos.audio.SosAlertManager
 import com.example.xabarsos.audio.SosSoundType
+import com.example.xabarsos.audio.VoiceCallManager
 import com.example.xabarsos.bluetooth.BluetoothSosManager
 import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
@@ -32,6 +33,7 @@ class SosRepository(private val context: Context) {
     val notificationManager = SosNotificationManager(context)
     val webSocketManager = WebSocketSosManager(getServerUrl())
     val bluetoothManager = BluetoothSosManager(context)
+    val voiceCallManager = VoiceCallManager(context)
 
     private val _messages = MutableStateFlow<List<SosMessage>>(emptyList())
     val messages: StateFlow<List<SosMessage>> = _messages.asStateFlow()
@@ -58,6 +60,64 @@ class SosRepository(private val context: Context) {
     private var lastClearedTimestamp: Long = prefs.getLong("last_cleared_ts", 0L)
 
     init {
+        // Setup audio stream listener for Voice Calls
+        voiceCallManager.setSendAudioChunkListener { base64Audio ->
+            val session = voiceCallManager.currentSession.value
+            if (session != null) {
+                webSocketManager.sendCustomJson(
+                    mapOf(
+                        "type" to "voice_audio",
+                        "callId" to session.callId,
+                        "targetRecipient" to session.peerName,
+                        "senderName" to getUserName(),
+                        "senderDeviceId" to getDeviceId(),
+                        "audioData" to base64Audio
+                    )
+                )
+            }
+        }
+
+        // Setup listener for custom signaling (Voice Calls)
+        webSocketManager.setOnCustomJsonReceivedListener { jsonObj ->
+            if (jsonObj.has("type")) {
+                val type = jsonObj.get("type").asString
+                val myName = getUserName().trim()
+                val target = jsonObj.get("targetRecipient")?.asString?.trim() ?: ""
+
+                val isForMe = target.equals("BARCHAGA", ignoreCase = true)
+                        || target.equals("ALL", ignoreCase = true)
+                        || target.isEmpty()
+                        || target.equals(myName, ignoreCase = true)
+                        || myName.contains(target, ignoreCase = true)
+
+                if (isForMe) {
+                    when (type) {
+                        "call_offer" -> {
+                            val callId = jsonObj.get("callId")?.asString ?: ""
+                            val callerName = jsonObj.get("senderName")?.asString ?: "Noma'lum"
+                            val callerDeviceId = jsonObj.get("senderDeviceId")?.asString ?: ""
+                            if (callerDeviceId != getDeviceId()) {
+                                voiceCallManager.receiveIncomingCall(callId, callerName, callerDeviceId)
+                            }
+                        }
+                        "call_answer" -> {
+                            voiceCallManager.onCallAcceptedByPeer()
+                        }
+                        "call_reject", "call_hangup" -> {
+                            voiceCallManager.rejectOrEndCall()
+                        }
+                        "voice_audio" -> {
+                            val audioData = jsonObj.get("audioData")?.asString ?: ""
+                            val callerDeviceId = jsonObj.get("senderDeviceId")?.asString ?: ""
+                            if (callerDeviceId != getDeviceId() && audioData.isNotEmpty()) {
+                                voiceCallManager.onAudioChunkReceived(audioData)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Setup listener for WebSocket messages
         webSocketManager.setOnMessageReceivedListener { sosMessage ->
             processIncomingSosMessage(sosMessage)
@@ -260,6 +320,52 @@ class SosRepository(private val context: Context) {
         val currentList = _messages.value.toMutableList()
         currentList.removeAll { it.id == id }
         _messages.value = currentList
+    }
+
+    fun startVoiceCall(peerName: String, peerDeviceId: String = "") {
+        val callId = UUID.randomUUID().toString()
+        voiceCallManager.startOutgoingCall(callId, peerName, peerDeviceId)
+        webSocketManager.sendCustomJson(
+            mapOf(
+                "type" to "call_offer",
+                "callId" to callId,
+                "targetRecipient" to peerName,
+                "senderName" to getUserName(),
+                "senderDeviceId" to getDeviceId()
+            )
+        )
+    }
+
+    fun acceptVoiceCall() {
+        val session = voiceCallManager.currentSession.value
+        voiceCallManager.acceptIncomingCall()
+        if (session != null) {
+            webSocketManager.sendCustomJson(
+                mapOf(
+                    "type" to "call_answer",
+                    "callId" to session.callId,
+                    "targetRecipient" to session.peerName,
+                    "senderName" to getUserName(),
+                    "senderDeviceId" to getDeviceId()
+                )
+            )
+        }
+    }
+
+    fun rejectOrEndVoiceCall() {
+        val session = voiceCallManager.currentSession.value
+        voiceCallManager.rejectOrEndCall()
+        if (session != null) {
+            webSocketManager.sendCustomJson(
+                mapOf(
+                    "type" to "call_hangup",
+                    "callId" to session.callId,
+                    "targetRecipient" to session.peerName,
+                    "senderName" to getUserName(),
+                    "senderDeviceId" to getDeviceId()
+                )
+            )
+        }
     }
 
     fun clearHistory() {

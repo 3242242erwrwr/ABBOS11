@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.xabarsos.audio.CallState
 import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
@@ -62,6 +63,7 @@ import com.example.xabarsos.ui.components.MessagesHistoryDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
+import com.example.xabarsos.ui.components.VoiceCallDialog
 import com.example.xabarsos.ui.theme.DarkCardContainer
 import com.example.xabarsos.ui.theme.EmergencyRed
 import com.example.xabarsos.ui.theme.NeonGreen
@@ -82,6 +84,12 @@ fun SosHomeScreen(
     val soundType by viewModel.soundType.collectAsState()
     val friendsList by viewModel.friendsList.collectAsState()
     val connectionStatus by viewModel.connectionStatus.collectAsState()
+
+    val callState by viewModel.callState.collectAsState()
+    val currentCallSession by viewModel.currentCallSession.collectAsState()
+    val isMuted by viewModel.isMuted.collectAsState()
+    val isSpeakerOn by viewModel.isSpeakerOn.collectAsState()
+    val callDurationSeconds by viewModel.callDurationSeconds.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", Context.MODE_PRIVATE) }
@@ -304,9 +312,25 @@ fun SosHomeScreen(
             friendsList = friendsList,
             selectedRecipient = selectedRecipient,
             onSelectRecipient = { selectedRecipient = it },
+            onStartVoiceCall = { friendName -> viewModel.startVoiceCall(friendName) },
             onAddFriend = { name -> viewModel.addFriend(name) },
             onRemoveFriend = { name -> viewModel.removeFriend(name) },
             onDismiss = { showAddFriendDialog = false }
+        )
+    }
+
+    if (callState != CallState.IDLE) {
+        VoiceCallDialog(
+            callState = callState,
+            currentSession = currentCallSession,
+            isMuted = isMuted,
+            isSpeakerOn = isSpeakerOn,
+            durationSeconds = callDurationSeconds,
+            onAcceptCall = { viewModel.acceptVoiceCall() },
+            onRejectOrEndCall = { viewModel.rejectOrEndVoiceCall() },
+            onToggleMute = { viewModel.toggleMute() },
+            onToggleSpeaker = { viewModel.toggleSpeaker() },
+            onDismiss = { viewModel.rejectOrEndVoiceCall() }
         )
     }
 
