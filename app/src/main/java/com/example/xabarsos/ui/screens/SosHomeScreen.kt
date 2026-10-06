@@ -58,6 +58,7 @@ import com.example.xabarsos.network.ConnectionStatus
 import com.example.xabarsos.ui.SosViewModel
 import com.example.xabarsos.ui.components.AddFriendDialog
 import com.example.xabarsos.ui.components.AutoStartSetupDialog
+import com.example.xabarsos.ui.components.JamuHabarLogo
 import com.example.xabarsos.ui.components.MessagesHistoryDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
@@ -106,18 +107,22 @@ fun SosHomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = "🚨 XABAR SOS",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "Ismingiz: $userName",
-                            fontSize = 12.sp,
-                            color = Color.LightGray
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        JamuHabarLogo(size = 34.dp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "XABAR SOS",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Ismingiz: $userName",
+                                fontSize = 11.sp,
+                                color = Color.LightGray
+                            )
+                        }
                     }
                 },
                 actions = {

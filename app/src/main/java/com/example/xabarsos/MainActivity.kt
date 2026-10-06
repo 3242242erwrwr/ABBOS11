@@ -19,9 +19,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.example.xabarsos.service.SosForegroundService
 import com.example.xabarsos.ui.SosViewModel
 import com.example.xabarsos.ui.screens.SosHomeScreen
+import com.example.xabarsos.ui.screens.SplashScreen
 import com.example.xabarsos.ui.theme.XABARSOSTheme
 
 class MainActivity : ComponentActivity() {
@@ -57,7 +62,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SosHomeScreen(viewModel = viewModel)
+                    var isSplashFinished by remember { mutableStateOf(false) }
+
+                    if (!isSplashFinished) {
+                        SplashScreen(
+                            onSplashFinished = { isSplashFinished = true }
+                        )
+                    } else {
+                        SosHomeScreen(viewModel = viewModel)
+                    }
                 }
             }
         }

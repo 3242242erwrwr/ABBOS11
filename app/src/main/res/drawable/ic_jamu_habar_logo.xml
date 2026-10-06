@@ -8,38 +8,38 @@
     <!-- Dark Green Circular Outer Border -->
     <path
         android:fillColor="#0B331A"
-        android:pathData="M54,54m-42,0a42,42 0,1 1,84 0a42,42 0,1 1,-84 0" />
+        android:pathData="M54,54m-50,0a50,50 0,1 1,100 0a50,50 0,1 1,-100 0" />
 
     <!-- Neon Green Ring -->
     <path
         android:strokeColor="#00E676"
-        android:strokeWidth="3"
-        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+        android:strokeWidth="3.5"
+        android:pathData="M54,54m-48,0a48,48 0,1 1,96 0a48,48 0,1 1,-96 0" />
 
     <!-- Chat Bubble Icon -->
     <path
         android:fillColor="#00C853"
-        android:pathData="M38,32 C38,27 70,27 70,32 C70,44 58,49 48,49 L38,57 L40,46 C33,41 33,36 38,32 Z" />
+        android:pathData="M35,28 C35,22 73,22 73,28 C73,42 60,48 48,48 L35,58 L38,44 C30,38 30,32 35,28 Z" />
 
     <!-- 3 White Dots -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M46,37m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+        android:pathData="M44,34m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,37m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+        android:pathData="M54,34m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M62,37m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0" />
+        android:pathData="M64,34m-2.5,0a2.5,2.5 0,1 1,5 0a2.5,2.5 0,1 1,-5 0" />
 
     <!-- Radio Waves Arc -->
     <path
         android:strokeColor="#00E676"
-        android:strokeWidth="2"
-        android:pathData="M66,27 A 10,10 0 0,1 75,35" />
+        android:strokeWidth="2.5"
+        android:pathData="M68,22 A 12,12 0 0,1 78,32" />
     <path
         android:strokeColor="#00E676"
-        android:strokeWidth="2"
-        android:pathData="M70,23 A 15,18 0 0,1 82,34" />
+        android:strokeWidth="2.5"
+        android:pathData="M73,18 A 18,18 0 0,1 86,31" />
 
 </vector>
