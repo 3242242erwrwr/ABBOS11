@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.AlertDialog
@@ -23,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +41,7 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 @Composable
 fun MessagesHistoryDialog(
     messages: List<SosMessage>,
+    onDeleteSingleMessage: (String) -> Unit,
     onClearHistory: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -59,11 +63,11 @@ fun MessagesHistoryDialog(
                         tint = Color(0xFF00B0FF),
                         modifier = Modifier.size(26.dp)
                     )
-                    Spacer(modifier = Modifier.padding(end = 8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "📋 XABARLAR MENYUSI",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 17.sp
                     )
                 }
 
@@ -96,36 +100,65 @@ fun MessagesHistoryDialog(
                         )
                     }
                 } else {
-                    Text(
-                        text = "Jami ${messages.size} ta xabar saqlangan:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.LightGray,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Jami ${messages.size} ta xabar saqlangan:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.LightGray,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
 
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(280.dp)
+                            .height(300.dp)
                     ) {
                         items(messages, key = { it.id }) { message ->
-                            SosMessageCard(message = message)
+                            SosMessageCard(
+                                message = message,
+                                onDeleteMessage = { onDeleteSingleMessage(message.id) }
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Prominent Clear All History Button
+                    Button(
+                        onClick = onClearHistory,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = EmergencyRed,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "🗑️ BARCHA XABARLARNI O'CHIRISH",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
                     }
                 }
             }
         },
         confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = EmergencyRed,
-                    contentColor = Color.White
-                )
-            ) {
-                Text("YOPISH", fontWeight = FontWeight.Bold)
+            TextButton(onClick = onDismiss) {
+                Text("YOPISH", color = Color.Gray, fontWeight = FontWeight.Bold)
             }
         }
     )

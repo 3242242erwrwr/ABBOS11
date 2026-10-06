@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Settings
@@ -298,6 +299,7 @@ fun SosHomeScreen(
     if (showMessagesMenuDialog) {
         MessagesHistoryDialog(
             messages = messages,
+            onDeleteSingleMessage = { messageId -> viewModel.deleteMessageById(messageId) },
             onClearHistory = { viewModel.clearHistory() },
             onDismiss = { showMessagesMenuDialog = false }
         )
@@ -343,7 +345,10 @@ fun SosHomeScreen(
 }
 
 @Composable
-fun SosMessageCard(message: SosMessage) {
+fun SosMessageCard(
+    message: SosMessage,
+    onDeleteMessage: (() -> Unit)? = null
+) {
     val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
     val formattedTime = timeFormat.format(Date(message.timestamp))
 
@@ -360,7 +365,7 @@ fun SosMessageCard(message: SosMessage) {
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(14.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -370,15 +375,31 @@ fun SosMessageCard(message: SosMessage) {
                 Text(
                     text = if (message.isIncoming) "📥 KELGAN SOS: ${message.senderName}" else "📤 YUBORILGAN SOS: Siz",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     color = if (message.isIncoming) Color(0xFFFF5252) else Color(0xFF00B0FF)
                 )
 
-                Text(
-                    text = formattedTime,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = formattedTime,
+                        fontSize = 11.sp,
+                        color = Color.Gray
+                    )
+                    if (onDeleteMessage != null) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        IconButton(
+                            onClick = onDeleteMessage,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "O'chirish",
+                                tint = Color(0xFFFF5252),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(6.dp))

@@ -54,6 +54,8 @@ class SosRepository(private val context: Context) {
     private val processedMessageIds = HashSet<String>()
     @Volatile
     private var lastMutedTimestamp: Long = 0L
+    @Volatile
+    private var lastClearedTimestamp: Long = prefs.getLong("last_cleared_ts", 0L)
 
     init {
         // Setup listener for WebSocket messages
@@ -82,6 +84,11 @@ class SosRepository(private val context: Context) {
 
     @Synchronized
     fun processIncomingSosMessage(sosMessage: SosMessage) {
+        // Ignore messages older than last cleared timestamp
+        if (sosMessage.timestamp <= lastClearedTimestamp) {
+            return
+        }
+
         // Check if message ID was ALREADY processed
         if (processedMessageIds.contains(sosMessage.id)) {
             return
@@ -249,7 +256,15 @@ class SosRepository(private val context: Context) {
         _friendsList.value = currentList.sorted()
     }
 
+    fun deleteMessageById(id: String) {
+        val currentList = _messages.value.toMutableList()
+        currentList.removeAll { it.id == id }
+        _messages.value = currentList
+    }
+
     fun clearHistory() {
+        lastClearedTimestamp = System.currentTimeMillis()
+        prefs.edit().putLong("last_cleared_ts", lastClearedTimestamp).apply()
         _messages.value = emptyList()
         processedMessageIds.clear()
     }

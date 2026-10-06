@@ -59,6 +59,10 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
         repository.removeFriend(name)
     }
 
+    fun deleteMessageById(id: String) {
+        repository.deleteMessageById(id)
+    }
+
     fun clearHistory() {
         repository.clearHistory()
     }
