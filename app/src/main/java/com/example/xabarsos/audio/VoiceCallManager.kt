@@ -1,6 +1,7 @@
 package com.example.xabarsos.audio
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
@@ -10,6 +11,7 @@ import android.media.Ringtone
 import android.media.RingtoneManager
 import android.util.Base64
 import android.util.Log
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -75,56 +77,74 @@ class VoiceCallManager(private val context: Context) {
     }
 
     fun startOutgoingCall(callId: String, friendName: String, friendDeviceId: String) {
-        _currentSession.value = CallSession(
-            callId = callId,
-            peerName = friendName,
-            peerDeviceId = friendDeviceId,
-            isIncoming = false
-        )
-        _callState.value = CallState.OUTGOING_RINGING
+        try {
+            _currentSession.value = CallSession(
+                callId = callId,
+                peerName = friendName,
+                peerDeviceId = friendDeviceId,
+                isIncoming = false
+            )
+            _callState.value = CallState.OUTGOING_RINGING
+        } catch (t: Throwable) {
+            Log.e("VoiceCallManager", "Error starting outgoing call: ${t.message}")
+        }
     }
 
     fun receiveIncomingCall(callId: String, callerName: String, callerDeviceId: String) {
-        if (_callState.value != CallState.IDLE) {
-            // Already in a call
-            return
+        try {
+            if (_callState.value != CallState.IDLE) return
+            _currentSession.value = CallSession(
+                callId = callId,
+                peerName = callerName,
+                peerDeviceId = callerDeviceId,
+                isIncoming = true
+            )
+            _callState.value = CallState.INCOMING_RINGING
+            playRingtone()
+        } catch (t: Throwable) {
+            Log.e("VoiceCallManager", "Error receiving incoming call: ${t.message}")
         }
-        _currentSession.value = CallSession(
-            callId = callId,
-            peerName = callerName,
-            peerDeviceId = callerDeviceId,
-            isIncoming = true
-        )
-        _callState.value = CallState.INCOMING_RINGING
-        playRingtone()
     }
 
     fun acceptIncomingCall() {
-        stopRingtone()
-        _callState.value = CallState.CONNECTED
-        startAudioStream()
-        startCallTimer()
+        try {
+            stopRingtone()
+            _callState.value = CallState.CONNECTED
+            startAudioStream()
+            startCallTimer()
+        } catch (t: Throwable) {
+            Log.e("VoiceCallManager", "Error accepting incoming call: ${t.message}")
+        }
     }
 
     fun onCallAcceptedByPeer() {
-        stopRingtone()
-        _callState.value = CallState.CONNECTED
-        startAudioStream()
-        startCallTimer()
+        try {
+            stopRingtone()
+            _callState.value = CallState.CONNECTED
+            startAudioStream()
+            startCallTimer()
+        } catch (t: Throwable) {
+            Log.e("VoiceCallManager", "Error handling peer call acceptance: ${t.message}")
+        }
     }
 
     fun rejectOrEndCall() {
-        stopRingtone()
-        stopAudioStream()
-        stopCallTimer()
-        _callState.value = CallState.ENDED
-        scope.launch {
-            kotlinx.coroutines.delay(1000)
+        try {
+            stopRingtone()
+            stopAudioStream()
+            stopCallTimer()
+            _callState.value = CallState.ENDED
+            scope.launch {
+                kotlinx.coroutines.delay(800)
+                _callState.value = CallState.IDLE
+                _currentSession.value = null
+                _callDurationSeconds.value = 0
+                _isMuted.value = false
+                _isSpeakerOn.value = true
+            }
+        } catch (t: Throwable) {
             _callState.value = CallState.IDLE
             _currentSession.value = null
-            _callDurationSeconds.value = 0
-            _isMuted.value = false
-            _isSpeakerOn.value = true
         }
     }
 
@@ -133,15 +153,15 @@ class VoiceCallManager(private val context: Context) {
     }
 
     fun toggleSpeaker() {
-        val newSpeakerState = !_isSpeakerOn.value
-        _isSpeakerOn.value = newSpeakerState
         try {
+            val newSpeakerState = !_isSpeakerOn.value
+            _isSpeakerOn.value = newSpeakerState
             audioManager.isSpeakerphoneOn = newSpeakerState
             if (newSpeakerState) {
                 audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
             }
-        } catch (e: Exception) {
-            Log.e("VoiceCallManager", "Error toggling speaker: ${e.message}")
+        } catch (t: Throwable) {
+            Log.e("VoiceCallManager", "Error toggling speaker: ${t.message}")
         }
     }
 
@@ -150,8 +170,8 @@ class VoiceCallManager(private val context: Context) {
             val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
             incomingRingtone = RingtoneManager.getRingtone(context, ringtoneUri)
             incomingRingtone?.play()
-        } catch (e: Exception) {
-            Log.e("VoiceCallManager", "Error playing ringtone: ${e.message}")
+        } catch (t: Throwable) {
+            Log.e("VoiceCallManager", "Error playing ringtone: ${t.message}")
         }
     }
 
@@ -159,7 +179,7 @@ class VoiceCallManager(private val context: Context) {
         try {
             incomingRingtone?.stop()
             incomingRingtone = null
-        } catch (e: Exception) {}
+        } catch (t: Throwable) {}
     }
 
     private fun startCallTimer() {
@@ -174,7 +194,9 @@ class VoiceCallManager(private val context: Context) {
     }
 
     private fun stopCallTimer() {
-        durationTimerJob?.cancel()
+        try {
+            durationTimerJob?.cancel()
+        } catch (t: Throwable) {}
     }
 
     @Synchronized
@@ -183,59 +205,86 @@ class VoiceCallManager(private val context: Context) {
             audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
             audioManager.isSpeakerphoneOn = _isSpeakerOn.value
 
-            val minRecSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_IN, ENCODING)
-            try {
-                audioRecord = AudioRecord(
-                    MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                    SAMPLE_RATE,
-                    CHANNEL_IN,
-                    ENCODING,
-                    minRecSize * 2
-                )
-            } catch (se: SecurityException) {
-                Log.e("VoiceCallManager", "RECORD_AUDIO permission missing: ${se.message}")
-                return
-            }
-
-            val minTrackSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_OUT, ENCODING)
-            audioTrack = AudioTrack(
-                AudioManager.STREAM_VOICE_CALL,
-                SAMPLE_RATE,
-                CHANNEL_OUT,
-                ENCODING,
-                minTrackSize * 2,
-                AudioTrack.MODE_STREAM
-            )
-
-            audioTrack?.play()
-            isPlaying.set(true)
-
-            audioRecord?.startRecording()
-            isRecording.set(true)
-
-            // Audio Record Thread
-            scope.launch(Dispatchers.IO) {
-                val buffer = ByteArray(640) // 20ms chunks
-                while (isRecording.get() && _callState.value == CallState.CONNECTED) {
-                    val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
-                    if (read > 0 && !_isMuted.value) {
-                        val base64Chunk = Base64.encodeToString(buffer, 0, read, Base64.NO_WRAP)
-                        sendAudioChunkListener?.invoke(base64Chunk)
+            // 1. Create AudioRecord
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                val minRecSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_IN, ENCODING)
+                if (minRecSize > 0) {
+                    try {
+                        audioRecord = AudioRecord(
+                            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                            SAMPLE_RATE,
+                            CHANNEL_IN,
+                            ENCODING,
+                            minRecSize * 2
+                        )
+                    } catch (t: Throwable) {
+                        Log.e("VoiceCallManager", "Error creating AudioRecord: ${t.message}")
                     }
                 }
             }
-        } catch (e: Exception) {
-            Log.e("VoiceCallManager", "Error starting audio stream: ${e.message}")
+
+            if (audioRecord?.state == AudioRecord.STATE_INITIALIZED) {
+                try {
+                    audioRecord?.startRecording()
+                    isRecording.set(true)
+                } catch (t: Throwable) {
+                    Log.e("VoiceCallManager", "Error startRecording: ${t.message}")
+                }
+            }
+
+            // 2. Create AudioTrack
+            val minTrackSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_OUT, ENCODING)
+            if (minTrackSize > 0) {
+                try {
+                    audioTrack = AudioTrack(
+                        AudioManager.STREAM_VOICE_CALL,
+                        SAMPLE_RATE,
+                        CHANNEL_OUT,
+                        ENCODING,
+                        minTrackSize * 2,
+                        AudioTrack.MODE_STREAM
+                    )
+                } catch (t: Throwable) {
+                    Log.e("VoiceCallManager", "Error creating AudioTrack: ${t.message}")
+                }
+            }
+
+            if (audioTrack?.state == AudioTrack.STATE_INITIALIZED) {
+                try {
+                    audioTrack?.play()
+                    isPlaying.set(true)
+                } catch (t: Throwable) {
+                    Log.e("VoiceCallManager", "Error playing AudioTrack: ${t.message}")
+                }
+            }
+
+            // 3. Audio Recording Thread
+            scope.launch(Dispatchers.IO) {
+                val buffer = ByteArray(640) // 20ms chunks
+                while (isRecording.get() && _callState.value == CallState.CONNECTED) {
+                    try {
+                        val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
+                        if (read > 0 && !_isMuted.value) {
+                            val base64Chunk = Base64.encodeToString(buffer, 0, read, Base64.NO_WRAP)
+                            sendAudioChunkListener?.invoke(base64Chunk)
+                        }
+                    } catch (t: Throwable) {
+                        Log.e("VoiceCallManager", "Error reading AudioRecord: ${t.message}")
+                    }
+                }
+            }
+        } catch (t: Throwable) {
+            Log.e("VoiceCallManager", "Error starting audio stream: ${t.message}")
         }
     }
 
     fun onAudioChunkReceived(base64Data: String) {
-        if (_callState.value == CallState.CONNECTED && isPlaying.get()) {
+        if (_callState.value == CallState.CONNECTED && isPlaying.get() && audioTrack?.state == AudioTrack.STATE_INITIALIZED) {
             try {
                 val pcmData = Base64.decode(base64Data, Base64.NO_WRAP)
                 audioTrack?.write(pcmData, 0, pcmData.size)
-            } catch (e: Exception) {
-                Log.e("VoiceCallManager", "Error playing audio chunk: ${e.message}")
+            } catch (t: Throwable) {
+                Log.e("VoiceCallManager", "Error playing audio chunk: ${t.message}")
             }
         }
     }
@@ -248,18 +297,18 @@ class VoiceCallManager(private val context: Context) {
         try {
             audioRecord?.stop()
             audioRecord?.release()
-        } catch (e: Exception) {}
+        } catch (t: Throwable) {}
         audioRecord = null
 
         try {
             audioTrack?.stop()
             audioTrack?.release()
-        } catch (e: Exception) {}
+        } catch (t: Throwable) {}
         audioTrack = null
 
         try {
             audioManager.mode = AudioManager.MODE_NORMAL
             audioManager.isSpeakerphoneOn = false
-        } catch (e: Exception) {}
+        } catch (t: Throwable) {}
     }
 }
