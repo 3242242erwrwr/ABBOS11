@@ -6,8 +6,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -48,6 +50,7 @@ class SosForegroundService : Service() {
     private var wifiLock: WifiManager.WifiLock? = null
     private var repository: SosRepository? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var connectivityReceiver: BroadcastReceiver? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
 
     override fun onCreate() {
@@ -89,8 +92,9 @@ class SosForegroundService : Service() {
         // 4. Instantiate Repository to keep WebSocket & Bluetooth connected 24/7
         repository = SosRepository.getInstance(applicationContext)
 
-        // 5. Register System Network Callback to immediately reconnect when Wi-Fi or 4G turns ON
+        // 5. Register System Network Callback & BroadcastReceiver to immediately reconnect on 4G LTE or Wi-Fi toggle
         registerNetworkCallback()
+        registerConnectivityReceiver()
 
         // 6. Start 1-second HTTP REST Sync Loop for 100% Guarantee
         startBackgroundSyncLoop()
@@ -106,14 +110,14 @@ class SosForegroundService : Service() {
             networkCallback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     super.onAvailable(network)
-                    Log.d("SosForegroundService", "Wi-Fi / Mobile Network Available. Restoring connection...")
+                    Log.d("SosForegroundService", "4G / Wi-Fi Network Available. Restoring connection...")
                     handleNetworkRestored()
                 }
 
                 override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
                     super.onCapabilitiesChanged(network, networkCapabilities)
                     if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
-                        Log.d("SosForegroundService", "Wi-Fi / Mobile Internet Validated. Syncing...")
+                        Log.d("SosForegroundService", "4G / Wi-Fi Internet Validated. Syncing...")
                         handleNetworkRestored()
                     }
                 }
@@ -129,6 +133,26 @@ class SosForegroundService : Service() {
         }
     }
 
+    @Suppress("DEPRECATION")
+    private fun registerConnectivityReceiver() {
+        try {
+            connectivityReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    Log.d("SosForegroundService", "CONNECTIVITY_ACTION Broadcast: 4G/Wi-Fi toggled!")
+                    handleNetworkRestored()
+                }
+            }
+            val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(connectivityReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(connectivityReceiver, filter)
+            }
+        } catch (e: Exception) {
+            Log.e("SosForegroundService", "Error registering connectivity receiver: ${e.message}")
+        }
+    }
+
     private fun handleNetworkRestored() {
         serviceScope.launch {
             try {
@@ -137,6 +161,10 @@ class SosForegroundService : Service() {
                 }
             } catch (e: Exception) {}
 
+            repository?.webSocketManager?.reconnect()
+            triggerImmediateSync()
+
+            delay(300)
             repository?.webSocketManager?.reconnect()
             triggerImmediateSync()
 
@@ -223,6 +251,9 @@ class SosForegroundService : Service() {
             networkCallback?.let {
                 val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                 connectivityManager.unregisterNetworkCallback(it)
+            }
+            connectivityReceiver?.let {
+                unregisterReceiver(it)
             }
         } catch (e: Exception) {
             Log.e("SosForegroundService", "Error releasing locks: ${e.message}")
