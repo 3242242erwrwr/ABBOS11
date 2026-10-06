@@ -1,6 +1,10 @@
 package com.example.xabarsos.ui.screens
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.xabarsos.audio.CallState
 import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
@@ -95,6 +100,25 @@ fun SosHomeScreen(
     val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", Context.MODE_PRIVATE) }
     var showFirstLaunchAutoStart by remember {
         mutableStateOf(!prefs.getBoolean("autostart_dialog_shown", false))
+    }
+
+    var targetCallFriend by remember { mutableStateOf("") }
+
+    val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted && targetCallFriend.isNotBlank()) {
+            viewModel.startVoiceCall(targetCallFriend)
+        }
+    }
+
+    val checkAndStartVoiceCall: (String) -> Unit = { friendName ->
+        targetCallFriend = friendName
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            viewModel.startVoiceCall(friendName)
+        } else {
+            recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
     }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
@@ -229,7 +253,7 @@ fun SosHomeScreen(
                             friendsList = friendsList,
                             selectedRecipient = selectedRecipient,
                             onSelectRecipient = { selectedRecipient = it },
-                            onStartVoiceCall = { peerName -> viewModel.startVoiceCall(peerName) },
+                            onStartVoiceCall = { peerName -> checkAndStartVoiceCall(peerName) },
                             onOpenAddFriendDialog = { showAddFriendDialog = true },
                             onSendSos = { sosText, targetRecipient ->
                                 viewModel.sendSos(sosText, targetRecipient)
@@ -313,7 +337,7 @@ fun SosHomeScreen(
             friendsList = friendsList,
             selectedRecipient = selectedRecipient,
             onSelectRecipient = { selectedRecipient = it },
-            onStartVoiceCall = { friendName -> viewModel.startVoiceCall(friendName) },
+            onStartVoiceCall = { friendName -> checkAndStartVoiceCall(friendName) },
             onAddFriend = { name -> viewModel.addFriend(name) },
             onRemoveFriend = { name -> viewModel.removeFriend(name) },
             onDismiss = { showAddFriendDialog = false }
