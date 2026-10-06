@@ -263,10 +263,19 @@ class VoiceCallManager(private val context: Context) {
     @Synchronized
     private fun startAudioStream() {
         try {
+            // Auto Boost In-Call and Music Volumes to 100% Maximum
             try {
+                val maxCallVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
+                audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxCallVol, 0)
+
+                val maxMusicVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVol, 0)
+
                 audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
                 audioManager.isSpeakerphoneOn = _isSpeakerOn.value
-            } catch (t: Throwable) {}
+            } catch (t: Throwable) {
+                Log.e("VoiceCallManager", "Error boosting volume: ${t.message}")
+            }
 
             // Determine Hardware Supported Sample Rate (16000Hz or 8000Hz)
             var sampleRate = 16000
@@ -277,12 +286,12 @@ class VoiceCallManager(private val context: Context) {
             }
             val frameSizeShorts = if (sampleRate == 16000) 640 else 320
 
-            // 1. Create AudioRecord
+            // 1. Create AudioRecord (MIC / VOICE_RECOGNITION Primary)
             if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                 if (minRecSize > 0) {
                     try {
                         audioRecord = AudioRecord(
-                            MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                            MediaRecorder.AudioSource.MIC,
                             sampleRate,
                             CHANNEL_IN,
                             ENCODING,
@@ -291,14 +300,14 @@ class VoiceCallManager(private val context: Context) {
                     } catch (t: Throwable) {
                         try {
                             audioRecord = AudioRecord(
-                                MediaRecorder.AudioSource.MIC,
+                                MediaRecorder.AudioSource.VOICE_COMMUNICATION,
                                 sampleRate,
                                 CHANNEL_IN,
                                 ENCODING,
                                 maxOf(minRecSize * 2, frameSizeShorts * 4)
                             )
                         } catch (t2: Throwable) {
-                            Log.e("VoiceCallManager", "Error creating AudioRecord MIC fallback: ${t2.message}")
+                            Log.e("VoiceCallManager", "Error creating AudioRecord fallback: ${t2.message}")
                         }
                     }
                 }
@@ -313,7 +322,7 @@ class VoiceCallManager(private val context: Context) {
                 }
             }
 
-            // 2. Create AudioTrack
+            // 2. Create Low-Latency AudioTrack
             var minTrackSize = AudioTrack.getMinBufferSize(sampleRate, CHANNEL_OUT, ENCODING)
             if (minTrackSize <= 0) {
                 minTrackSize = AudioTrack.getMinBufferSize(8000, CHANNEL_OUT, ENCODING)
@@ -377,7 +386,7 @@ class VoiceCallManager(private val context: Context) {
                 }
             }
 
-            // 3. Audio Recording Thread
+            // 3. Audio Recording Thread (With 2.5x Voice Gain Amplification)
             scope.launch(Dispatchers.IO) {
                 val shortBuffer = ShortArray(frameSizeShorts)
                 while (isRecording.get() && _callState.value == CallState.CONNECTED) {
@@ -386,6 +395,11 @@ class VoiceCallManager(private val context: Context) {
                         if (currentRec != null && currentRec.state == AudioRecord.STATE_INITIALIZED) {
                             val readShorts = currentRec.read(shortBuffer, 0, frameSizeShorts)
                             if (readShorts > 0 && !_isMuted.value) {
+                                // Apply 2.5x Voice Gain Amplification for loud, crisp voice
+                                for (i in 0 until readShorts) {
+                                    val amp = (shortBuffer[i] * 2.5f).toInt()
+                                    shortBuffer[i] = amp.coerceIn(-32768, 32767).toShort()
+                                }
                                 val g711Bytes = G711Codec.encodeULaw(shortBuffer, readShorts)
                                 val base64Chunk = Base64.encodeToString(g711Bytes, Base64.NO_WRAP)
                                 sendAudioChunkListener?.invoke(base64Chunk)
