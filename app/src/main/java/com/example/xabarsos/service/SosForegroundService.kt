@@ -16,7 +16,9 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
@@ -52,6 +54,29 @@ class SosForegroundService : Service() {
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var connectivityReceiver: BroadcastReceiver? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val backgroundHeartbeatRunnable = object : Runnable {
+        override fun run() {
+            try {
+                // Briefly acquire WakeLock to force CPU execution even in Doze mode
+                val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                @Suppress("DEPRECATION")
+                val tempWakeLock = powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK,
+                    "XABARSOS::HeartbeatSyncLock"
+                )
+                tempWakeLock.acquire(1000) // Acquire WakeLock for 1s
+
+                repository?.webSocketManager?.connect()
+                triggerImmediateSync()
+            } catch (e: Exception) {
+                Log.e("SosForegroundService", "Error in heartbeat: ${e.message}")
+            } finally {
+                mainHandler.postDelayed(this, 1500) // Repeat every 1.5s
+            }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -96,8 +121,8 @@ class SosForegroundService : Service() {
         registerNetworkCallback()
         registerConnectivityReceiver()
 
-        // 6. Start 1-second HTTP REST Sync Loop for 100% Guarantee
-        startBackgroundSyncLoop()
+        // 6. Start Doze-Proof CPU WakeLock Heartbeat Loop
+        mainHandler.post(backgroundHeartbeatRunnable)
     }
 
     private fun registerNetworkCallback() {
@@ -193,24 +218,6 @@ class SosForegroundService : Service() {
         }
     }
 
-    private fun startBackgroundSyncLoop() {
-        serviceScope.launch {
-            while (true) {
-                delay(1000) // Fast 1-second background HTTP REST sync loop
-                try {
-                    val currentRepo = repository ?: continue
-                    currentRepo.webSocketManager.fetchRecentSosMessagesHttp(0) { newMsgs ->
-                        newMsgs.forEach { msg ->
-                            currentRepo.processIncomingSosMessage(msg)
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("SosForegroundService", "Error in sync loop: ${e.message}")
-                }
-            }
-        }
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // Return START_STICKY so Android automatically restarts service if killed
         return START_STICKY
@@ -242,6 +249,7 @@ class SosForegroundService : Service() {
         super.onDestroy()
         Log.d("SosForegroundService", "SosForegroundService Destroyed")
         try {
+            mainHandler.removeCallbacks(backgroundHeartbeatRunnable)
             if (partialWakeLock?.isHeld == true) {
                 partialWakeLock?.release()
             }
