@@ -5,6 +5,17 @@ const WebSocket = require('ws');
 const app = express();
 app.use(express.json());
 
+// Enable CORS for all mobile networks and origin domains
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: '/ws' });
 
@@ -16,7 +27,9 @@ wss.on('connection', (ws) => {
     console.log(`[XABAR-SOS] Client connected. Total active clients: ${connectedClients.size}`);
 
     // Send welcome ping
-    ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+    try {
+        ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+    } catch (e) {}
 
     ws.on('message', (data) => {
         try {

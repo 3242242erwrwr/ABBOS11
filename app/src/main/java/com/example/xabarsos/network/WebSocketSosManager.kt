@@ -154,6 +154,10 @@ class WebSocketSosManager(
     @Synchronized
     fun reconnect() {
         disconnect()
+        try {
+            client.connectionPool.evictAll()
+            fastHttpClient.connectionPool.evictAll()
+        } catch (e: Exception) {}
         connect()
     }
 
