@@ -163,67 +163,69 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // MAIN PRESET SOS BUTTONS (Compact Height: 48.dp)
-            Button(
-                onClick = { onSendSos("SAIDBEK QARA", selectedRecipient) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = EmergencyRed,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(10.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "🚨 SAIDBEK QARA",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Button(
-                onClick = { onSendSos("JASMINAHON QANI", selectedRecipient) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = EmergencyPink,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(10.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "🚨 JASMINAHON QANI",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // PRESET BUTTONS (Compact 2-Column Grid Layout)
+            // ROW 1: "SAIDBEK QARA" & "JASMINAHON QANI" (Matching 2-Column Grid Size)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Button 1: "NIMA GAP?"
+                Button(
+                    onClick = { onSendSos("SAIDBEK QARA", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = EmergencyRed,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "🚨 SAIDBEK QARA",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Button(
+                    onClick = { onSendSos("JASMINAHON QANI", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = EmergencyPink,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "🚨 JASMINAHON QANI",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // ROW 2: "NIMA GAP?" & "ESHIKNI OCH"
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
                 Button(
                     onClick = { onSendSos("NIMA GAP?", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
@@ -231,7 +233,7 @@ fun QuickSosButtons(
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp)
@@ -241,15 +243,14 @@ fun QuickSosButtons(
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "💬 NIMA GAP?",
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
-                // Button 2: "ESHIKNI OCH"
                 Button(
                     onClick = { onSendSos("ESHIKNI OCH", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
@@ -257,7 +258,7 @@ fun QuickSosButtons(
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp)
@@ -267,10 +268,10 @@ fun QuickSosButtons(
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "🚪 ESHIKNI OCH",
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -278,11 +279,11 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // ROW 3: "REALDA NIMA GAP?" & "UYGA KETYABMAN"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Button 3: "REALDA NIMA GAP?"
                 Button(
                     onClick = { onSendSos("REALDA NIMA GAP?", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
@@ -290,7 +291,7 @@ fun QuickSosButtons(
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp)
@@ -308,7 +309,6 @@ fun QuickSosButtons(
                     )
                 }
 
-                // Button 4: "UYGA KETYABMAN"
                 Button(
                     onClick = { onSendSos("UYGA KETYABMAN", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
@@ -316,7 +316,7 @@ fun QuickSosButtons(
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                     modifier = Modifier
                         .weight(1f)
                         .height(44.dp)
@@ -337,12 +337,11 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // NEW REQUESTED PRESET BUTTONS
+            // ROW 4: "MASHINADA MUAMMO" & "TEL QIL YORDAM KERAK"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Button 5: "MASHINADA MUAMMO"
                 Button(
                     onClick = { onSendSos("MASHINADA MUAMMO", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
@@ -368,7 +367,6 @@ fun QuickSosButtons(
                     )
                 }
 
-                // Button 6: "TEL QIL YORDAM KERAK"
                 Button(
                     onClick = { onSendSos("TEL QIL YORDAM KERAK", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
@@ -397,11 +395,11 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // ROW 5: "YIG'ILYAPMIZ KELILAR" & "ISHGA CHIQTINGMI?"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Button 7: "YIG'ILYAPMIZ KELILAR"
                 Button(
                     onClick = { onSendSos("YIG'ILYAPMIZ KELILAR", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
@@ -428,7 +426,6 @@ fun QuickSosButtons(
                     )
                 }
 
-                // Button 8: "ISHGA CHIQTINGMI?"
                 Button(
                     onClick = { onSendSos("ISHGA CHIQTINGMI?", selectedRecipient) },
                     colors = ButtonDefaults.buttonColors(
