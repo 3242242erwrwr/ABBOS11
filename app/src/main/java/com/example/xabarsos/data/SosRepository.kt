@@ -7,6 +7,7 @@ import com.example.xabarsos.bluetooth.BluetoothSosManager
 import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.WebSocketSosManager
+import com.example.xabarsos.notification.SosNotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ class SosRepository(private val context: Context) {
     private val prefs = context.getSharedPreferences("xabar_sos_prefs", Context.MODE_PRIVATE)
 
     val alertManager = SosAlertManager(context)
+    val notificationManager = SosNotificationManager(context)
     val webSocketManager = WebSocketSosManager(getServerUrl())
     val bluetoothManager = BluetoothSosManager(context)
 
@@ -74,6 +76,7 @@ class SosRepository(private val context: Context) {
                 if (isForMe) {
                     _activeIncomingAlert.value = sosMessage
                     alertManager.playAlertSoundAndVibrate(_soundType.value)
+                    notificationManager.showHeadsUpSosNotification(sosMessage)
                 }
             }
         }
@@ -82,6 +85,7 @@ class SosRepository(private val context: Context) {
     fun dismissActiveAlert() {
         _activeIncomingAlert.value = null
         alertManager.stopAlertSoundAndVibrate()
+        notificationManager.cancelEmergencyNotification()
     }
 
     fun sendSos(messageText: String, targetRecipient: String = "BARCHAGA") {
