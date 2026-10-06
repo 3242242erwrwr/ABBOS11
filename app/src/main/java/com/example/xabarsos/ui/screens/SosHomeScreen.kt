@@ -65,6 +65,7 @@ import com.example.xabarsos.ui.components.AddFriendDialog
 import com.example.xabarsos.ui.components.AutoStartSetupDialog
 import com.example.xabarsos.ui.components.JamuHabarLogo
 import com.example.xabarsos.ui.components.MessagesHistoryDialog
+import com.example.xabarsos.ui.components.MicrophonePermissionDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
@@ -103,12 +104,15 @@ fun SosHomeScreen(
     }
 
     var targetCallFriend by remember { mutableStateOf("") }
+    var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
 
     val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted && targetCallFriend.isNotBlank()) {
             viewModel.startVoiceCall(targetCallFriend)
+        } else if (!isGranted) {
+            showMicrophonePermissionDialog = true
         }
     }
 
@@ -118,6 +122,7 @@ fun SosHomeScreen(
         if (isGranted) {
             viewModel.acceptVoiceCall()
         } else {
+            showMicrophonePermissionDialog = true
             viewModel.rejectOrEndVoiceCall()
         }
     }
@@ -381,6 +386,12 @@ fun SosHomeScreen(
                 prefs.edit().putBoolean("autostart_dialog_shown", true).apply()
                 showFirstLaunchAutoStart = false
             }
+        )
+    }
+
+    if (showMicrophonePermissionDialog) {
+        MicrophonePermissionDialog(
+            onDismiss = { showMicrophonePermissionDialog = false }
         )
     }
 }
