@@ -94,6 +94,7 @@ fun SosHomeScreen(
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAddFriendDialog by remember { mutableStateOf(false) }
     var showMessagesMenuDialog by remember { mutableStateOf(false) }
+    var selectedRecipient by remember { mutableStateOf("BARCHAGA") }
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
@@ -247,6 +248,8 @@ fun SosHomeScreen(
                     item {
                         QuickSosButtons(
                             friendsList = friendsList,
+                            selectedRecipient = selectedRecipient,
+                            onSelectRecipient = { selectedRecipient = it },
                             onOpenAddFriendDialog = { showAddFriendDialog = true },
                             onSendSos = { sosText, targetRecipient ->
                                 viewModel.sendSos(sosText, targetRecipient)
@@ -328,6 +331,8 @@ fun SosHomeScreen(
     if (showAddFriendDialog) {
         AddFriendDialog(
             friendsList = friendsList,
+            selectedRecipient = selectedRecipient,
+            onSelectRecipient = { selectedRecipient = it },
             onAddFriend = { name -> viewModel.addFriend(name) },
             onRemoveFriend = { name -> viewModel.removeFriend(name) },
             onDismiss = { showAddFriendDialog = false }

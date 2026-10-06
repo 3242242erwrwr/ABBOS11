@@ -59,26 +59,13 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 @Composable
 fun QuickSosButtons(
     friendsList: List<String>,
+    selectedRecipient: String = "BARCHAGA",
+    onSelectRecipient: (String) -> Unit = {},
     onOpenAddFriendDialog: () -> Unit = {},
     onSendSos: (text: String, recipient: String) -> Unit,
     onStopAllAlerts: () -> Unit = {}
 ) {
     var customMessage by remember { mutableStateOf("") }
-    var selectedRecipient by remember { mutableStateOf("BARCHAGA") }
-    var previousListSize by remember { mutableStateOf(friendsList.size) }
-
-    // Auto-select newly added friend when friendsList grows
-    if (friendsList.size > previousListSize) {
-        friendsList.lastOrNull()?.let { newlyAdded ->
-            selectedRecipient = newlyAdded
-        }
-        previousListSize = friendsList.size
-    } else if (friendsList.size < previousListSize) {
-        previousListSize = friendsList.size
-        if (friendsList.none { it.equals(selectedRecipient, ignoreCase = true) }) {
-            selectedRecipient = "BARCHAGA"
-        }
-    }
 
     Card(
         modifier = Modifier
@@ -111,7 +98,7 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // DYNAMIC FRIENDS CHIPS
+            // DYNAMIC FRIENDS CHIPS & DO'STLARIM BUTTON
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -121,7 +108,7 @@ fun QuickSosButtons(
                 FilterChip(
                     selected = (selectedRecipient == "BARCHAGA"),
                     onClick = {
-                        selectedRecipient = "BARCHAGA"
+                        onSelectRecipient("BARCHAGA")
                     },
                     label = { Text("📢 Barchaga", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                     colors = FilterChipDefaults.filterChipColors(
@@ -132,19 +119,28 @@ fun QuickSosButtons(
                     )
                 )
 
-                // DYNAMIC DEDICATED FRIEND CHIPS
-                friendsList.forEach { friendName ->
+                // Option 2: DO'STLARIM SPISOK BUTTON
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenAddFriendDialog,
+                    label = { Text("🤝 Do'stlarim (${friendsList.size}) ›", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = Color(0xFF00B0FF).copy(alpha = 0.25f),
+                        labelColor = Color(0xFF00B0FF)
+                    )
+                )
+
+                // Option 3: SELECTED SPECIFIC FRIEND BADGE WITH CANCEL TAP
+                if (selectedRecipient != "BARCHAGA") {
                     FilterChip(
-                        selected = (selectedRecipient.equals(friendName, ignoreCase = true)),
+                        selected = true,
                         onClick = {
-                            selectedRecipient = friendName
+                            onSelectRecipient("BARCHAGA")
                         },
-                        label = { Text("👤 $friendName", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                        label = { Text("🎯 $selectedRecipient ✕", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF00B0FF),
-                            selectedLabelColor = Color.White,
-                            containerColor = Color(0xFF22222E).copy(alpha = 0.8f),
-                            labelColor = Color.LightGray
+                            selectedLabelColor = Color.White
                         )
                     )
                 }

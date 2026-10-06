@@ -1,6 +1,6 @@
 package com.example.xabarsos.ui.components
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,14 +9,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +50,8 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 @Composable
 fun AddFriendDialog(
     friendsList: List<String>,
+    selectedRecipient: String = "BARCHAGA",
+    onSelectRecipient: (String) -> Unit = {},
     onAddFriend: (String) -> Unit,
     onRemoveFriend: (String) -> Unit,
     onDismiss: () -> Unit
@@ -62,90 +67,99 @@ fun AddFriendDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.PersonAdd,
+                    imageVector = Icons.Default.Group,
                     contentDescription = null,
                     tint = Color(0xFF00B0FF),
                     modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.padding(end = 8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "🤝 DO'STLAR BILAN ULANISH",
+                    text = "🤝 DO'STLARIM RO'YXATI (SPISOK)",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 17.sp
                 )
             }
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Do'stingizning ismini yozing:",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Yangi do'st ismini yozib qo'shing:",
+                    style = MaterialTheme.typography.bodySmall,
                     color = Color.LightGray
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                OutlinedTextField(
-                    value = newFriendName,
-                    onValueChange = {
-                        newFriendName = it
-                        successNotification = ""
-                    },
-                    placeholder = { Text("Masa'lan: Saidbek yoki Jasmina", color = Color.Gray, fontSize = 13.sp) },
-                    singleLine = true,
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done,
-                        capitalization = KeyboardCapitalization.Words
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = newFriendName,
+                        onValueChange = {
+                            newFriendName = it
+                            successNotification = ""
+                        },
+                        placeholder = { Text("Ismni yozing...", color = Color.Gray, fontSize = 13.sp) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done,
+                            capitalization = KeyboardCapitalization.Words
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if (newFriendName.isNotBlank()) {
+                                    val trimmed = newFriendName.trim()
+                                    onAddFriend(trimmed)
+                                    onSelectRecipient(trimmed)
+                                    successNotification = "✓ '$trimmed' qo'shildi va tanlandi!"
+                                    newFriendName = ""
+                                }
+                            }
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF121218),
+                            unfocusedContainerColor = Color(0xFF121218),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedBorderColor = Color(0xFF00B0FF),
+                            unfocusedBorderColor = Color(0xFF333344)
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    Button(
+                        onClick = {
                             if (newFriendName.isNotBlank()) {
                                 val trimmed = newFriendName.trim()
                                 onAddFriend(trimmed)
-                                successNotification = "✓ '$trimmed' do'stlar ro'yxatiga qo'shildi!"
+                                onSelectRecipient(trimmed)
+                                successNotification = "✓ '$trimmed' qo'shildi va tanlandi!"
                                 newFriendName = ""
                             }
-                        }
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF121218),
-                        unfocusedContainerColor = Color(0xFF121218),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = Color(0xFF00B0FF),
-                        unfocusedBorderColor = Color(0xFF333344)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    onClick = {
-                        if (newFriendName.isNotBlank()) {
-                            val trimmed = newFriendName.trim()
-                            onAddFriend(trimmed)
-                            successNotification = "✓ '$trimmed' do'stlar ro'yxatiga qo'shildi!"
-                            newFriendName = ""
-                        }
-                    },
-                    enabled = newFriendName.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00B0FF),
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("OK / DO'STNI QO'SHISH", fontWeight = FontWeight.Bold)
+                        },
+                        enabled = newFriendName.isNotBlank(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00B0FF),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.height(46.dp)
+                    ) {
+                        Text("➕ QO'SHISH", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
                 }
 
                 if (successNotification.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = successNotification,
                         color = Color(0xFF00E676),
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -153,12 +167,28 @@ fun AddFriendDialog(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // SPISOK / SAQLANGAN DO'STLAR RO'YXATI
-                Text(
-                    text = "📋 Saqlangan do'stlar ro'yxati (Spisok):",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFFD54F)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "📋 Barcha Do'stlarim (${friendsList.size} ta):",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFD54F)
+                    )
+
+                    if (selectedRecipient != "BARCHAGA") {
+                        Text(
+                            text = "Tanlangan: $selectedRecipient",
+                            color = Color(0xFF00B0FF),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(6.dp))
 
                 if (friendsList.isEmpty()) {
@@ -168,7 +198,7 @@ fun AddFriendDialog(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = "Hozircha do'stlar qo'shilmagan. Yuqoriga ismni yozib 'OK' tugmasini bosing!",
+                            text = "Hozircha do'stlariz yo'q. Yuqoriga ismni yozib '➕ QO'SHISH' tugmasini bosing!",
                             color = Color.Gray,
                             fontSize = 12.sp,
                             modifier = Modifier.padding(12.dp)
@@ -178,15 +208,56 @@ fun AddFriendDialog(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(140.dp)
+                            .height(200.dp)
                     ) {
-                        items(friendsList) { friend ->
+                        // Option 1: BARCHAGA
+                        item {
+                            val isBarchaga = selectedRecipient == "BARCHAGA"
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 3.dp),
+                                    .padding(vertical = 3.dp)
+                                    .clickable { onSelectRecipient("BARCHAGA") },
                                 colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFF121218)
+                                    containerColor = if (isBarchaga) EmergencyRed.copy(alpha = 0.3f) else Color(0xFF121218)
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = if (isBarchaga) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                            contentDescription = null,
+                                            tint = if (isBarchaga) EmergencyRed else Color.Gray,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "📢 BARCHAGA (Barcha qurilmalar)",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        items(friendsList) { friend ->
+                            val isSelected = selectedRecipient.equals(friend, ignoreCase = true)
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 3.dp)
+                                    .clickable { onSelectRecipient(friend) },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isSelected) Color(0xFF00B0FF).copy(alpha = 0.3f) else Color(0xFF121218)
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
@@ -197,14 +268,29 @@ fun AddFriendDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = "👤 $friend",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                            contentDescription = null,
+                                            tint = if (isSelected) Color(0xFF00B0FF) else Color.Gray,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "👤 $friend",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
+
                                     IconButton(
-                                        onClick = { onRemoveFriend(friend) },
+                                        onClick = {
+                                            if (selectedRecipient.equals(friend, ignoreCase = true)) {
+                                                onSelectRecipient("BARCHAGA")
+                                            }
+                                            onRemoveFriend(friend)
+                                        },
                                         modifier = Modifier.size(28.dp)
                                     ) {
                                         Icon(
