@@ -11,6 +11,7 @@ import com.example.xabarsos.notification.SosNotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
 
 class SosRepository(private val context: Context) {
 
@@ -66,12 +67,22 @@ class SosRepository(private val context: Context) {
         bluetoothManager.startListeningForNearbySos()
     }
 
+    fun getDeviceId(): String {
+        var devId = prefs.getString("device_id", null)
+        if (devId.isNullOrEmpty()) {
+            devId = UUID.randomUUID().toString()
+            prefs.edit().putString("device_id", devId).apply()
+        }
+        return devId
+    }
+
     private fun onNewSosReceived(sosMessage: SosMessage) {
         val currentList = _messages.value.toMutableList()
+        val myDeviceId = getDeviceId()
         val myName = getUserName().trim()
 
-        // 1. IF THIS MESSAGE WAS SENT BY ME, DO NOT PLAY ALARM SOUND OR SHOW NOTIFICATION!
-        if (sosMessage.senderName.trim().equals(myName, ignoreCase = true)) {
+        // 1. IF THIS MESSAGE WAS SENT FROM THIS EXACT PHYSICAL DEVICE ID, DO NOT PLAY ALARM OR NOTIFICATION!
+        if (sosMessage.deviceId.isNotBlank() && sosMessage.deviceId == myDeviceId) {
             if (currentList.none { it.id == sosMessage.id }) {
                 currentList.add(0, sosMessage.copy(isIncoming = false))
                 _messages.value = currentList
@@ -79,7 +90,7 @@ class SosRepository(private val context: Context) {
             return
         }
 
-        // 2. INCOMING MESSAGE FROM SOMEONE ELSE
+        // 2. INCOMING MESSAGE FROM ANOTHER DEVICE
         if (currentList.none { it.id == sosMessage.id }) {
             currentList.add(0, sosMessage)
             _messages.value = currentList
@@ -108,10 +119,12 @@ class SosRepository(private val context: Context) {
 
     fun sendSos(messageText: String, targetRecipient: String = "BARCHAGA") {
         val currentSender = getUserName()
+        val myDeviceId = getDeviceId()
         val formattedTarget = targetRecipient.trim().ifEmpty { "BARCHAGA" }
 
         val sosMessage = SosMessage(
             senderName = currentSender,
+            deviceId = myDeviceId,
             messageText = messageText,
             targetRecipient = formattedTarget,
             channel = MessageChannel.INTERNET,
@@ -127,7 +140,7 @@ class SosRepository(private val context: Context) {
         webSocketManager.sendSosMessage(sosMessage)
 
         // 3. Broadcast via Bluetooth LE (Offline local mesh)
-        bluetoothManager.broadcastSosOffline(currentSender, formattedTarget, messageText)
+        bluetoothManager.broadcastSosOffline(currentSender, myDeviceId, formattedTarget, messageText)
     }
 
     fun saveUserName(name: String) {

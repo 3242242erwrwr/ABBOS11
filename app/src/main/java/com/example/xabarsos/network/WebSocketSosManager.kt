@@ -36,6 +36,7 @@ class WebSocketSosManager(
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS) // WebSocket keeps connection alive
         .writeTimeout(10, TimeUnit.SECONDS)
+        .pingInterval(10, TimeUnit.SECONDS) // CRITICAL: Keeps WebSocket alive through proxies/carriers/sleep
         .build()
 
     private val gson = Gson()
@@ -90,6 +91,7 @@ class WebSocketSosManager(
                     val messageObj = gson.fromJson(text, JsonObject::class.java)
                     val sosMessage = SosMessage(
                         id = messageObj.get("id")?.asString ?: java.util.UUID.randomUUID().toString(),
+                        deviceId = messageObj.get("deviceId")?.asString ?: "",
                         senderName = messageObj.get("senderName")?.asString ?: "Noma'lum",
                         messageText = messageObj.get("messageText")?.asString ?: "SOS!",
                         targetRecipient = messageObj.get("targetRecipient")?.asString ?: "BARCHAGA",
@@ -119,7 +121,7 @@ class WebSocketSosManager(
 
     private fun scheduleReconnect() {
         scope.launch {
-            delay(5000) // Reconnect after 5 seconds
+            delay(3000) // Reconnect fast after 3 seconds
             if (_connectionStatus.value !is ConnectionStatus.Connected) {
                 connect()
             }
@@ -141,6 +143,7 @@ class WebSocketSosManager(
         val messageJson = gson.toJson(
             mapOf(
                 "id" to message.id,
+                "deviceId" to message.deviceId,
                 "senderName" to message.senderName,
                 "messageText" to message.messageText,
                 "targetRecipient" to message.targetRecipient,

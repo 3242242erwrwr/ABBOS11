@@ -10,6 +10,7 @@ enum class MessageChannel(val displayName: String) {
 
 data class SosMessage(
     val id: String = UUID.randomUUID().toString(),
+    val deviceId: String = "",
     val senderName: String,
     val messageText: String,
     val targetRecipient: String = "BARCHAGA",
