@@ -33,20 +33,20 @@ sealed class ConnectionStatus {
 class WebSocketSosManager(
     private var serverBaseUrl: String = "https://xabar-sos.onrender.com"
 ) {
-    // Client for persistent WebSocket with proper 4G LTE timeouts
+    // Client for persistent WebSocket - NO pingInterval so OkHttp NEVER force-closes connection!
     private val client = OkHttpClient.Builder()
-        .connectTimeout(6, TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS)
-        .writeTimeout(6, TimeUnit.SECONDS)
-        .pingInterval(4, TimeUnit.SECONDS) // Fast 4s Ping for 4G CGNAT NAT Keep-Alive
+        .writeTimeout(10, TimeUnit.SECONDS)
+        .pingInterval(0, TimeUnit.SECONDS) // 0 disables OkHttp strict ping/pong timeout disconnects!
         .retryOnConnectionFailure(true)
         .build()
 
-    // Client for HTTP REST requests & background polling on 4G
+    // Client for HTTP REST requests & background polling
     private val fastHttpClient = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
-        .writeTimeout(5, TimeUnit.SECONDS)
+        .connectTimeout(6, TimeUnit.SECONDS)
+        .readTimeout(6, TimeUnit.SECONDS)
+        .writeTimeout(6, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .build()
 
@@ -54,7 +54,7 @@ class WebSocketSosManager(
     private var webSocket: WebSocket? = null
     private val scope = CoroutineScope(Dispatchers.IO + Job())
 
-    private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected)
+    private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Connected)
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
 
     private var onMessageReceivedListener: ((SosMessage) -> Unit)? = null
@@ -84,7 +84,7 @@ class WebSocketSosManager(
     private fun startConnectionWatcher() {
         scope.launch {
             while (true) {
-                delay(2000) // Every 2s verify connection is active
+                delay(1000) // Always ensure connection is active
                 if (_connectionStatus.value !is ConnectionStatus.Connected) {
                     connect()
                 }
@@ -93,7 +93,7 @@ class WebSocketSosManager(
     }
 
     fun connect() {
-        if (_connectionStatus.value == ConnectionStatus.Connected) return
+        if (_connectionStatus.value == ConnectionStatus.Connected && webSocket != null) return
 
         _connectionStatus.value = ConnectionStatus.Connecting
 
@@ -113,12 +113,12 @@ class WebSocketSosManager(
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 Log.d("WebSocketSosManager", "Message received: $text")
+                _connectionStatus.value = ConnectionStatus.Connected
                 try {
                     val messageObj = gson.fromJson(text, JsonObject::class.java)
 
                     // Skip server heartbeat ping frames
                     if (messageObj.has("type") && messageObj.get("type").asString == "ping") {
-                        _connectionStatus.value = ConnectionStatus.Connected
                         return
                     }
 
@@ -142,13 +142,11 @@ class WebSocketSosManager(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e("WebSocketSosManager", "WebSocket Failure: ${t.message}")
-                _connectionStatus.value = ConnectionStatus.Error(t.message ?: "Ulanish xatosi")
                 scheduleReconnect()
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d("WebSocketSosManager", "WebSocket Closed: $reason")
-                _connectionStatus.value = ConnectionStatus.Disconnected
                 scheduleReconnect()
             }
         })
@@ -156,10 +154,8 @@ class WebSocketSosManager(
 
     private fun scheduleReconnect() {
         scope.launch {
-            delay(1000) // Fast auto-reconnect after 1 second
-            if (_connectionStatus.value !is ConnectionStatus.Connected) {
-                connect()
-            }
+            delay(500) // Immediate auto-reconnect in 500ms
+            connect()
         }
     }
 
@@ -169,9 +165,10 @@ class WebSocketSosManager(
     }
 
     fun disconnect() {
-        webSocket?.close(1000, "Normal closure")
+        try {
+            webSocket?.close(1000, "Normal closure")
+        } catch (e: Exception) {}
         webSocket = null
-        _connectionStatus.value = ConnectionStatus.Disconnected
     }
 
     fun fetchRecentSosMessagesHttp(sinceTimestamp: Long, onResult: (List<SosMessage>) -> Unit) {
@@ -181,6 +178,7 @@ class WebSocketSosManager(
                 val request = Request.Builder().url(pollUrl).get().build()
                 fastHttpClient.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
+                        _connectionStatus.value = ConnectionStatus.Connected
                         val bodyStr = response.body?.string() ?: ""
                         val jsonObj = gson.fromJson(bodyStr, JsonObject::class.java)
                         val messagesArray = jsonObj.getAsJsonArray("messages") ?: JsonArray()
@@ -202,7 +200,6 @@ class WebSocketSosManager(
                         }
 
                         if (parsedList.isNotEmpty()) {
-                            _connectionStatus.value = ConnectionStatus.Connected
                             onResult(parsedList)
                         }
                     }
