@@ -33,16 +33,16 @@ sealed class ConnectionStatus {
 class WebSocketSosManager(
     private var serverBaseUrl: String = "https://xabar-sos.onrender.com"
 ) {
-    // Client for persistent WebSocket - NO pingInterval so OkHttp NEVER force-closes connection!
+    // Client for persistent WebSocket
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS)
         .writeTimeout(10, TimeUnit.SECONDS)
-        .pingInterval(0, TimeUnit.SECONDS) // 0 disables OkHttp strict ping/pong timeout disconnects!
+        .pingInterval(0, TimeUnit.SECONDS) // Disable strict ping timeouts
         .retryOnConnectionFailure(true)
         .build()
 
-    // Client for HTTP REST requests & background polling
+    // Client for fast HTTP REST requests & background polling
     private val fastHttpClient = OkHttpClient.Builder()
         .connectTimeout(6, TimeUnit.SECONDS)
         .readTimeout(6, TimeUnit.SECONDS)
@@ -84,14 +84,15 @@ class WebSocketSosManager(
     private fun startConnectionWatcher() {
         scope.launch {
             while (true) {
-                delay(1000) // Always ensure connection is active
-                if (_connectionStatus.value !is ConnectionStatus.Connected) {
-                    connect()
+                delay(1000) // Always ensure active connection
+                if (_connectionStatus.value !is ConnectionStatus.Connected || webSocket == null) {
+                    reconnect()
                 }
             }
         }
     }
 
+    @Synchronized
     fun connect() {
         if (_connectionStatus.value == ConnectionStatus.Connected && webSocket != null) return
 
@@ -104,6 +105,10 @@ class WebSocketSosManager(
         val request = Request.Builder()
             .url(wsUrl)
             .build()
+
+        try {
+            webSocket?.cancel()
+        } catch (e: Exception) {}
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -142,11 +147,13 @@ class WebSocketSosManager(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e("WebSocketSosManager", "WebSocket Failure: ${t.message}")
+                _connectionStatus.value = ConnectionStatus.Disconnected
                 scheduleReconnect()
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d("WebSocketSosManager", "WebSocket Closed: $reason")
+                _connectionStatus.value = ConnectionStatus.Disconnected
                 scheduleReconnect()
             }
         })
@@ -154,21 +161,25 @@ class WebSocketSosManager(
 
     private fun scheduleReconnect() {
         scope.launch {
-            delay(500) // Immediate auto-reconnect in 500ms
-            connect()
+            delay(500) // Fast 500ms auto-reconnect
+            reconnect()
         }
     }
 
+    @Synchronized
     fun reconnect() {
         disconnect()
         connect()
     }
 
+    @Synchronized
     fun disconnect() {
         try {
+            webSocket?.cancel()
             webSocket?.close(1000, "Normal closure")
         } catch (e: Exception) {}
         webSocket = null
+        _connectionStatus.value = ConnectionStatus.Disconnected
     }
 
     fun fetchRecentSosMessagesHttp(sinceTimestamp: Long, onResult: (List<SosMessage>) -> Unit) {
@@ -225,7 +236,7 @@ class WebSocketSosManager(
         // 1. Send via WebSocket
         val wsSent = webSocket?.send(messageJson) == true
 
-        // 2. ALWAYS Send via HTTP REST with up to 3 Retries on 4G LTE
+        // 2. ALWAYS Send via HTTP REST with up to 3 Retries on 4G LTE / Wi-Fi
         scope.launch {
             var retries = 0
             var success = false
@@ -239,13 +250,13 @@ class WebSocketSosManager(
                         .build()
                     fastHttpClient.newCall(request).execute().use { response ->
                         if (response.isSuccessful) {
-                            Log.d("WebSocketSosManager", "HTTP POST 4G broadcast succeeded on attempt ${retries + 1}")
+                            Log.d("WebSocketSosManager", "HTTP POST broadcast succeeded on attempt ${retries + 1}")
                             _connectionStatus.value = ConnectionStatus.Connected
                             success = true
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("WebSocketSosManager", "HTTP POST 4G broadcast error attempt ${retries + 1}: ${e.message}")
+                    Log.e("WebSocketSosManager", "HTTP POST broadcast error attempt ${retries + 1}: ${e.message}")
                     retries++
                     delay(300) // Wait 300ms before retry
                 }
