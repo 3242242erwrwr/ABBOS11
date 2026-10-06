@@ -51,6 +51,10 @@ class SosRepository(private val context: Context) {
     private val _friendsList = MutableStateFlow(getFriendsList())
     val friendsList: StateFlow<List<String>> = _friendsList.asStateFlow()
 
+    private val processedMessageIds = HashSet<String>()
+    @Volatile
+    private var lastMutedTimestamp: Long = 0L
+
     init {
         // Setup listener for WebSocket messages
         webSocketManager.setOnMessageReceivedListener { sosMessage ->
@@ -76,7 +80,14 @@ class SosRepository(private val context: Context) {
         return devId
     }
 
+    @Synchronized
     fun processIncomingSosMessage(sosMessage: SosMessage) {
+        // Check if message ID was ALREADY processed
+        if (processedMessageIds.contains(sosMessage.id)) {
+            return
+        }
+        processedMessageIds.add(sosMessage.id)
+
         val currentList = _messages.value.toMutableList()
         val myDeviceId = getDeviceId()
         val myName = getUserName().trim()
@@ -86,10 +97,8 @@ class SosRepository(private val context: Context) {
                 || sosMessage.messageText.contains("BEKOR QILINDI", ignoreCase = true)
 
         if (isStopSignal) {
-            // COMPLETELY HALT ALL ALERTS, SOUND, VIBRATION AND NOTIFICATIONS!
+            lastMutedTimestamp = maxOf(lastMutedTimestamp, sosMessage.timestamp, System.currentTimeMillis())
             dismissActiveAlert()
-            SosAlertManager.stopAllAlerts()
-            notificationManager.cancelEmergencyNotification()
 
             if (currentList.none { it.id == sosMessage.id }) {
                 currentList.add(0, sosMessage)
@@ -112,6 +121,11 @@ class SosRepository(private val context: Context) {
             currentList.add(0, sosMessage)
             _messages.value = currentList
 
+            // Ignore old messages created BEFORE last STOP/mute timestamp!
+            if (sosMessage.timestamp <= lastMutedTimestamp) {
+                return
+            }
+
             val target = sosMessage.targetRecipient.trim()
             val isForMe = target.equals("BARCHAGA", ignoreCase = true)
                     || target.equals("ALL", ignoreCase = true)
@@ -129,8 +143,9 @@ class SosRepository(private val context: Context) {
     }
 
     fun dismissActiveAlert() {
+        lastMutedTimestamp = System.currentTimeMillis()
         _activeIncomingAlert.value = null
-        alertManager.stopAlertSoundAndVibrate()
+        SosAlertManager.stopAllAlerts()
         notificationManager.cancelEmergencyNotification()
     }
 
@@ -148,10 +163,18 @@ class SosRepository(private val context: Context) {
             isIncoming = false
         )
 
+        // Mark own message ID as processed
+        processedMessageIds.add(sosMessage.id)
+
         // 1. Add to local list
         val currentList = _messages.value.toMutableList()
         currentList.add(0, sosMessage)
         _messages.value = currentList
+
+        // If sending STOP message, update mute timestamp locally
+        if (messageText.contains("STOP", ignoreCase = true) || messageText.contains("BEKOR QILINDI", ignoreCase = true)) {
+            dismissActiveAlert()
+        }
 
         // 2. Broadcast via WebSocket (Wi-Fi / 4G Internet)
         webSocketManager.sendSosMessage(sosMessage)
@@ -226,5 +249,6 @@ class SosRepository(private val context: Context) {
 
     fun clearHistory() {
         _messages.value = emptyList()
+        processedMessageIds.clear()
     }
 }

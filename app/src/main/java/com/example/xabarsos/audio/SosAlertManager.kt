@@ -30,15 +30,23 @@ class SosAlertManager(private val context: Context) {
         @Volatile
         private var isRinging = false
 
+        @Synchronized
         fun stopAllAlerts() {
             isRinging = false
 
             try {
                 globalMediaPlayer?.let { player ->
-                    if (player.isPlaying) {
-                        player.stop()
-                    }
-                    player.release()
+                    try {
+                        if (player.isPlaying) {
+                            player.stop()
+                        }
+                    } catch (e: Exception) {}
+                    try {
+                        player.reset()
+                    } catch (e: Exception) {}
+                    try {
+                        player.release()
+                    } catch (e: Exception) {}
                 }
             } catch (e: Exception) {
                 Log.e("SosAlertManager", "Error stopping global media player: ${e.message}")
