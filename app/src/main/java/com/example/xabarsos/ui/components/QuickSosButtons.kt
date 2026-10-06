@@ -14,8 +14,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.DoorFront
+import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -78,7 +82,7 @@ fun QuickSosButtons(
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(14.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             // HEADER: DO'STLAR BILAN ULANISH
             Row(
@@ -94,7 +98,7 @@ fun QuickSosButtons(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // DYNAMIC FRIENDS CHIPS
             FlowRow(
@@ -154,34 +158,35 @@ fun QuickSosButtons(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Main Requested Preset SOS Buttons: "SAIDBEK QARA" & "JASMINAHON QANI"
+            // MAIN PRESET SOS BUTTONS (Compact Height: 48.dp)
             Button(
                 onClick = { onSendSos("SAIDBEK QARA", selectedRecipient) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = EmergencyRed,
                     contentColor = Color.White
                 ),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(48.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = null,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(22.dp)
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "🚨 SAIDBEK QARA",
-                    fontSize = 19.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Black
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Button(
                 onClick = { onSendSos("JASMINAHON QANI", selectedRecipient) },
@@ -189,25 +194,145 @@ fun QuickSosButtons(
                     containerColor = EmergencyPink,
                     contentColor = Color.White
                 ),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(48.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = null,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(22.dp)
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "🚨 JASMINAHON QANI",
-                    fontSize = 19.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Black
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // NEW REQUESTED PRESET BUTTONS (Compact 2-Column Grid Layout)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Button 1: "NIMA GAP?"
+                Button(
+                    onClick = { onSendSos("NIMA GAP?", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00B0FF),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Chat,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "💬 NIMA GAP?",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Button 2: "ESHIKNI OCH"
+                Button(
+                    onClick = { onSendSos("ESHIKNI OCH", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFAB47BC),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DoorFront,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "🚪 ESHIKNI OCH",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Button 3: "REALDA NIMA GAP?"
+                Button(
+                    onClick = { onSendSos("REALDA NIMA GAP?", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF26A69A),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ElectricBolt,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "⚡ REALDA NIMA GAP?",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Button 4: "UYGA KETYABMAN"
+                Button(
+                    onClick = { onSendSos("UYGA KETYABMAN", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF7E57C2),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "🏠 UYGA KETYABMAN",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // 🛑 AUXILIARY EMERGENCY STOP BUTTON (YORDAMCHI STOP KNOPKASI)
             Button(
@@ -219,31 +344,32 @@ fun QuickSosButtons(
                     containerColor = Color(0xFFFF9100),
                     contentColor = Color.Black
                 ),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(46.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Cancel,
                     contentDescription = "Stop",
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(22.dp),
                     tint = Color.Black
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "🛑 STOP (SOS VA SIRENANI TO'XTATISH)",
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Black
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Compact Custom Message Section (Kichikroq va ixcham)
             Text(
                 text = "Boshqa maxsus xabar yozish:",
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -261,15 +387,15 @@ fun QuickSosButtons(
                         Text(
                             text = "Xabaringizni yozing...",
                             color = Color.Gray,
-                            fontSize = 13.sp
+                            fontSize = 12.sp
                         )
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(46.dp),
-                    shape = RoundedCornerShape(10.dp),
+                        .height(44.dp),
+                    shape = RoundedCornerShape(8.dp),
                     singleLine = true,
-                    textStyle = TextStyle(fontSize = 14.sp, color = Color.White),
+                    textStyle = TextStyle(fontSize = 13.sp, color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color(0xFF121218),
                         unfocusedContainerColor = Color(0xFF121218),
@@ -280,7 +406,7 @@ fun QuickSosButtons(
                     )
                 )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
 
                 Button(
                     onClick = {
@@ -290,21 +416,21 @@ fun QuickSosButtons(
                         }
                     },
                     enabled = customMessage.isNotBlank(),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = EmergencyRed,
                         disabledContainerColor = Color(0xFF333344)
                     ),
                     modifier = Modifier
-                        .height(46.dp)
-                        .width(48.dp)
+                        .height(44.dp)
+                        .width(46.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Yuborish",
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
