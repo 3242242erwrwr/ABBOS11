@@ -229,6 +229,7 @@ fun SosHomeScreen(
                             friendsList = friendsList,
                             selectedRecipient = selectedRecipient,
                             onSelectRecipient = { selectedRecipient = it },
+                            onStartVoiceCall = { peerName -> viewModel.startVoiceCall(peerName) },
                             onOpenAddFriendDialog = { showAddFriendDialog = true },
                             onSendSos = { sosText, targetRecipient ->
                                 viewModel.sendSos(sosText, targetRecipient)

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
@@ -61,6 +62,7 @@ fun QuickSosButtons(
     friendsList: List<String>,
     selectedRecipient: String = "BARCHAGA",
     onSelectRecipient: (String) -> Unit = {},
+    onStartVoiceCall: (String) -> Unit = {},
     onOpenAddFriendDialog: () -> Unit = {},
     onSendSos: (text: String, recipient: String) -> Unit,
     onStopAllAlerts: () -> Unit = {}
@@ -571,6 +573,35 @@ fun QuickSosButtons(
                         contentDescription = "Yuborish",
                         tint = Color.White,
                         modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                // GREEN CALL BUTTON (Alohida Ovozli Qo'ng'iroq Knopkasi - Main Screen)
+                Button(
+                    onClick = {
+                        if (selectedRecipient != "BARCHAGA") {
+                            onStartVoiceCall(selectedRecipient)
+                        } else {
+                            onOpenAddFriendDialog()
+                        }
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00E676),
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier
+                        .height(44.dp)
+                        .width(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhoneInTalk,
+                        contentDescription = "Ovozli Qo'ng'iroq",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
