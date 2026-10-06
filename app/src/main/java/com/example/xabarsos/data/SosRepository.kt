@@ -54,12 +54,12 @@ class SosRepository(private val context: Context) {
     init {
         // Setup listener for WebSocket messages
         webSocketManager.setOnMessageReceivedListener { sosMessage ->
-            onNewSosReceived(sosMessage)
+            processIncomingSosMessage(sosMessage)
         }
 
         // Setup listener for Bluetooth messages
         bluetoothManager.setOnMessageReceivedListener { sosMessage ->
-            onNewSosReceived(sosMessage)
+            processIncomingSosMessage(sosMessage)
         }
 
         // Connect WebSocket and Bluetooth Scan
@@ -76,7 +76,7 @@ class SosRepository(private val context: Context) {
         return devId
     }
 
-    private fun onNewSosReceived(sosMessage: SosMessage) {
+    fun processIncomingSosMessage(sosMessage: SosMessage) {
         val currentList = _messages.value.toMutableList()
         val myDeviceId = getDeviceId()
         val myName = getUserName().trim()

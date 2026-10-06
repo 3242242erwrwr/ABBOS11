@@ -16,6 +16,11 @@ import androidx.core.app.NotificationCompat
 import com.example.xabarsos.MainActivity
 import com.example.xabarsos.R
 import com.example.xabarsos.data.SosRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class SosForegroundService : Service() {
 
@@ -36,6 +41,8 @@ class SosForegroundService : Service() {
     private var partialWakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
     private var repository: SosRepository? = null
+    private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
+    private var lastPolledTimestamp = System.currentTimeMillis() - 60000 // Last 1 min
 
     override fun onCreate() {
         super.onCreate()
@@ -75,6 +82,30 @@ class SosForegroundService : Service() {
 
         // 4. Instantiate Repository to keep WebSocket & Bluetooth connected 24/7
         repository = SosRepository.getInstance(applicationContext)
+
+        // 5. Start 2-second HTTP REST Sync Loop for 100% Guarantee
+        startBackgroundSyncLoop()
+    }
+
+    private fun startBackgroundSyncLoop() {
+        serviceScope.launch {
+            while (true) {
+                delay(2000) // Every 2 seconds sync recent SOS messages via HTTP REST
+                try {
+                    val currentRepo = repository ?: continue
+                    currentRepo.webSocketManager.fetchRecentSosMessagesHttp(lastPolledTimestamp) { newMsgs ->
+                        newMsgs.forEach { msg ->
+                            if (msg.timestamp > lastPolledTimestamp) {
+                                lastPolledTimestamp = msg.timestamp
+                            }
+                            currentRepo.processIncomingSosMessage(msg)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("SosForegroundService", "Error in sync loop: ${e.message}")
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -122,8 +153,8 @@ class SosForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("🚨 XABAR SOS Tizimi Aktiv")
-            .setContentText("Ekran qorong'i bo'lganda ham SOS xabarlari uzluksiz qabul qilinadi")
+            .setContentTitle("🚨 XABAR SOS Tizimi Aktiv (24/7)")
+            .setContentText("Ekran qorong'i bo'lganda ham SOS xabarlari uzluksiz va kafolatlangan holda keladi")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
