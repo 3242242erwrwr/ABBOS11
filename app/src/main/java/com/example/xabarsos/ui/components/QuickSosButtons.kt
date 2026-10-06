@@ -1,18 +1,23 @@
 package com.example.xabarsos.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -33,8 +38,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -163,7 +166,7 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // ROW 1: "SAIDBEK QARA" & "JASMINAHON QANI" (Matching 2-Column Grid Size)
+            // ROW 1: "SAIDBEK QARA" & "JASMINAHON QANI"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -454,7 +457,7 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Compact Custom Message Section (Kichikroq va ixcham)
+            // Custom Message Section (PERFECT VERTICALLY CENTERED BasicTextField)
             Text(
                 text = "Boshqa maxsus xabar yozish:",
                 fontSize = 11.sp,
@@ -468,30 +471,36 @@ fun QuickSosButtons(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedTextField(
+                BasicTextField(
                     value = customMessage,
                     onValueChange = { customMessage = it },
-                    placeholder = {
-                        Text(
-                            text = "Xabaringizni yozing...",
-                            color = Color.Gray,
-                            fontSize = 11.sp
-                        )
-                    },
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        fontSize = 13.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    ),
                     modifier = Modifier
                         .weight(1f)
-                        .height(40.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    singleLine = true,
-                    textStyle = TextStyle(fontSize = 12.sp, color = Color.White),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF121218),
-                        unfocusedContainerColor = Color(0xFF121218),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = EmergencyRed,
-                        unfocusedBorderColor = Color(0xFF333344)
-                    )
+                        .height(44.dp)
+                        .background(Color(0xFF121218), RoundedCornerShape(10.dp))
+                        .border(1.dp, EmergencyRed, RoundedCornerShape(10.dp))
+                        .padding(horizontal = 12.dp),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            contentAlignment = Alignment.CenterStart,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            if (customMessage.isEmpty()) {
+                                Text(
+                                    text = "Xabaringizni yozing...",
+                                    color = Color.Gray,
+                                    fontSize = 13.sp
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.width(6.dp))
@@ -504,21 +513,21 @@ fun QuickSosButtons(
                         }
                     },
                     enabled = customMessage.isNotBlank(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = EmergencyRed,
                         disabledContainerColor = Color(0xFF333344)
                     ),
                     modifier = Modifier
-                        .height(40.dp)
-                        .width(42.dp)
+                        .height(44.dp)
+                        .width(44.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Yuborish",
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
