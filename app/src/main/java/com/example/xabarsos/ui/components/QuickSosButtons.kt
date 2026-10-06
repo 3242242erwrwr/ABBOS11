@@ -16,12 +16,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,7 +58,7 @@ fun QuickSosButtons(
     friendsList: List<String>,
     onOpenAddFriendDialog: () -> Unit,
     onSendSos: (text: String, recipient: String) -> Unit,
-    onStopAllAlerts: () -> Unit
+    onStopAllAlerts: () -> Unit = {}
 ) {
     var customMessage by remember { mutableStateOf("") }
     var selectedRecipient by remember { mutableStateOf("BARCHAGA") }
@@ -215,7 +218,7 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // NEW REQUESTED PRESET BUTTONS (Compact 2-Column Grid Layout)
+            // PRESET BUTTONS (Compact 2-Column Grid Layout)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -332,36 +335,124 @@ fun QuickSosButtons(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // 🛑 AUXILIARY EMERGENCY STOP BUTTON (YORDAMCHI STOP KNOPKASI)
-            Button(
-                onClick = {
-                    onStopAllAlerts()
-                    onSendSos("🛑 SOS BEKOR QILINDI (STOP)", selectedRecipient)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF9100),
-                    contentColor = Color.Black
-                ),
-                shape = RoundedCornerShape(10.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(46.dp)
+            // NEW REQUESTED PRESET BUTTONS
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Cancel,
-                    contentDescription = "Stop",
-                    modifier = Modifier.size(22.dp),
-                    tint = Color.Black
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "🛑 STOP (SOS VA SIRENANI TO'XTATISH)",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Black
-                )
+                // Button 5: "MASHINADA MUAMMO"
+                Button(
+                    onClick = { onSendSos("MASHINADA MUAMMO", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF7043),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DirectionsCar,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "🚗 MASHINADA MUAMMO",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Button 6: "TEL QIL YORDAM KERAK"
+                Button(
+                    onClick = { onSendSos("TEL QIL YORDAM KERAK", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF66BB6A),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "📞 TEL QIL YORDAM KERAK",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Button 7: "YIG'ILYAPMIZ KELILAR"
+                Button(
+                    onClick = { onSendSos("YIG'ILYAPMIZ KELILAR", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFA726),
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Groups,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.Black
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "👥 YIG'ILYAPMIZ KELILAR",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Button 8: "ISHGA CHIQTINGMI?"
+                Button(
+                    onClick = { onSendSos("ISHGA CHIQTINGMI?", selectedRecipient) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF42A5F5),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Work,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "💼 ISHGA CHIQTINGMI?",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
