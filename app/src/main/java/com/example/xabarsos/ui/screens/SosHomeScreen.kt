@@ -54,7 +54,9 @@ import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
 import com.example.xabarsos.ui.SosViewModel
+import android.content.Context
 import com.example.xabarsos.ui.components.AddFriendDialog
+import com.example.xabarsos.ui.components.AutoStartSetupDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
@@ -80,6 +82,12 @@ fun SosHomeScreen(
     val friendsList by viewModel.friendsList.collectAsState()
     val connectionStatus by viewModel.connectionStatus.collectAsState()
     val isScanningBluetooth by viewModel.isScanningBluetooth.collectAsState()
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", android.content.Context.MODE_PRIVATE) }
+    var showFirstLaunchAutoStart by remember {
+        mutableStateOf(!prefs.getBoolean("autostart_dialog_shown", false))
+    }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAddFriendDialog by remember { mutableStateOf(false) }
@@ -344,6 +352,15 @@ fun SosHomeScreen(
             onAddFriend = { name -> viewModel.addFriend(name) },
             onRemoveFriend = { name -> viewModel.removeFriend(name) },
             onDismiss = { showAddFriendDialog = false }
+        )
+    }
+
+    if (showFirstLaunchAutoStart) {
+        AutoStartSetupDialog(
+            onDismiss = {
+                prefs.edit().putBoolean("autostart_dialog_shown", true).apply()
+                showFirstLaunchAutoStart = false
+            }
         )
     }
 }
