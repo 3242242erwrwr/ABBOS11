@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.example.xabarsos.audio.SosAlertManager
 import com.example.xabarsos.data.SosRepository
 
 class SosNotificationActionReceiver : BroadcastReceiver() {
@@ -13,7 +14,9 @@ class SosNotificationActionReceiver : BroadcastReceiver() {
 
         if (intent?.action == SosNotificationManager.ACTION_DISMISS_ALARM) {
             try {
-                val repository = SosRepository(context.applicationContext)
+                SosAlertManager.stopAllAlerts()
+
+                val repository = SosRepository.getInstance(context.applicationContext)
                 repository.dismissActiveAlert()
 
                 val notificationManager = SosNotificationManager(context.applicationContext)

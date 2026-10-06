@@ -14,6 +14,17 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class SosRepository(private val context: Context) {
 
+    companion object {
+        @Volatile
+        private var INSTANCE: SosRepository? = null
+
+        fun getInstance(context: Context): SosRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: SosRepository(context.applicationContext).also { INSTANCE = it }
+            }
+        }
+    }
+
     private val prefs = context.getSharedPreferences("xabar_sos_prefs", Context.MODE_PRIVATE)
 
     val alertManager = SosAlertManager(context)
@@ -57,27 +68,34 @@ class SosRepository(private val context: Context) {
 
     private fun onNewSosReceived(sosMessage: SosMessage) {
         val currentList = _messages.value.toMutableList()
+        val myName = getUserName().trim()
+
+        // 1. IF THIS MESSAGE WAS SENT BY ME, DO NOT PLAY ALARM SOUND OR SHOW NOTIFICATION!
+        if (sosMessage.senderName.trim().equals(myName, ignoreCase = true)) {
+            if (currentList.none { it.id == sosMessage.id }) {
+                currentList.add(0, sosMessage.copy(isIncoming = false))
+                _messages.value = currentList
+            }
+            return
+        }
+
+        // 2. INCOMING MESSAGE FROM SOMEONE ELSE
         if (currentList.none { it.id == sosMessage.id }) {
             currentList.add(0, sosMessage)
             _messages.value = currentList
 
-            // Check if this incoming SOS message is targeted to me or to EVERYONE
-            if (sosMessage.isIncoming) {
-                val myName = getUserName().trim()
-                val target = sosMessage.targetRecipient.trim()
+            val target = sosMessage.targetRecipient.trim()
+            val isForMe = target.equals("BARCHAGA", ignoreCase = true)
+                    || target.equals("ALL", ignoreCase = true)
+                    || target.isEmpty()
+                    || target.equals(myName, ignoreCase = true)
+                    || myName.contains(target, ignoreCase = true)
+                    || target.contains(myName, ignoreCase = true)
 
-                val isForMe = target.equals("BARCHAGA", ignoreCase = true)
-                        || target.equals("ALL", ignoreCase = true)
-                        || target.isEmpty()
-                        || target.equals(myName, ignoreCase = true)
-                        || myName.contains(target, ignoreCase = true)
-                        || target.contains(myName, ignoreCase = true)
-
-                if (isForMe) {
-                    _activeIncomingAlert.value = sosMessage
-                    alertManager.playAlertSoundAndVibrate(_soundType.value)
-                    notificationManager.showHeadsUpSosNotification(sosMessage)
-                }
+            if (isForMe) {
+                _activeIncomingAlert.value = sosMessage
+                alertManager.playAlertSoundAndVibrate(_soundType.value)
+                notificationManager.showHeadsUpSosNotification(sosMessage)
             }
         }
     }

@@ -20,16 +20,49 @@ enum class SosSoundType(val displayName: String, val ringtoneType: Int) {
 
 class SosAlertManager(private val context: Context) {
 
-    private var mediaPlayer: MediaPlayer? = null
-    private var isRinging = false
+    companion object {
+        @Volatile
+        private var globalMediaPlayer: MediaPlayer? = null
+
+        @Volatile
+        private var globalVibrator: Vibrator? = null
+
+        @Volatile
+        private var isRinging = false
+
+        fun stopAllAlerts() {
+            isRinging = false
+
+            try {
+                globalMediaPlayer?.let { player ->
+                    if (player.isPlaying) {
+                        player.stop()
+                    }
+                    player.release()
+                }
+            } catch (e: Exception) {
+                Log.e("SosAlertManager", "Error stopping global media player: ${e.message}")
+            } finally {
+                globalMediaPlayer = null
+            }
+
+            try {
+                globalVibrator?.cancel()
+            } catch (e: Exception) {
+                Log.e("SosAlertManager", "Error stopping global vibrator: ${e.message}")
+            } finally {
+                globalVibrator = null
+            }
+        }
+    }
 
     private val audioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
     @Suppress("DEPRECATION")
-    private val vibrator: Vibrator? by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    private fun getVibratorInstance(): Vibrator? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
             vibratorManager?.defaultVibrator
         } else {
@@ -38,7 +71,7 @@ class SosAlertManager(private val context: Context) {
     }
 
     fun playAlertSoundAndVibrate(soundType: SosSoundType = SosSoundType.ALARM) {
-        if (isRinging) return
+        stopAllAlerts()
         isRinging = true
 
         // 1. WAKE UP SCREEN IF DARK/LOCKED AND MAXIMIZE VOLUME TO 100% FOR EMERGENCY SOS
@@ -70,8 +103,7 @@ class SosAlertManager(private val context: Context) {
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-            mediaPlayer?.release()
-            mediaPlayer = MediaPlayer().apply {
+            val newPlayer = MediaPlayer().apply {
                 setDataSource(context, alertUri)
                 setAudioAttributes(
                     AudioAttributes.Builder()
@@ -83,6 +115,7 @@ class SosAlertManager(private val context: Context) {
                 prepare()
                 start()
             }
+            globalMediaPlayer = newPlayer
         } catch (e: Exception) {
             Log.e("SosAlertManager", "Error playing alert sound: ${e.message}")
         }
@@ -90,6 +123,8 @@ class SosAlertManager(private val context: Context) {
         try {
             // Emergency Vibration pattern: [delay, vibrate, pause, vibrate, ...]
             val pattern = longArrayOf(0, 500, 200, 500, 200, 800)
+            val vibrator = getVibratorInstance()
+            globalVibrator = vibrator
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator?.vibrate(
                     VibrationEffect.createWaveform(pattern, 0)
@@ -104,29 +139,12 @@ class SosAlertManager(private val context: Context) {
     }
 
     fun testSound(soundType: SosSoundType) {
-        stopAlertSoundAndVibrate()
+        stopAllAlerts()
         playAlertSoundAndVibrate(soundType)
     }
 
     fun stopAlertSoundAndVibrate() {
-        isRinging = false
-        try {
-            mediaPlayer?.let {
-                if (it.isPlaying) {
-                    it.stop()
-                }
-                it.release()
-            }
-            mediaPlayer = null
-        } catch (e: Exception) {
-            Log.e("SosAlertManager", "Error stopping alert sound: ${e.message}")
-        }
-
-        try {
-            vibrator?.cancel()
-        } catch (e: Exception) {
-            Log.e("SosAlertManager", "Error stopping vibration: ${e.message}")
-        }
+        stopAllAlerts()
     }
 
     fun isAlertActive(): Boolean = isRinging

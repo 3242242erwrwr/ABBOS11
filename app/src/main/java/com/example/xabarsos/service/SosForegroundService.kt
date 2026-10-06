@@ -74,7 +74,7 @@ class SosForegroundService : Service() {
         startForeground(NOTIFICATION_ID, notification)
 
         // 4. Instantiate Repository to keep WebSocket & Bluetooth connected 24/7
-        repository = SosRepository(applicationContext)
+        repository = SosRepository.getInstance(applicationContext)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

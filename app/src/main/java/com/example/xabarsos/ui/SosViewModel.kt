@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 class SosViewModel(application: Application) : AndroidViewModel(application) {
 
-    val repository = SosRepository(application)
+    val repository = SosRepository.getInstance(application)
 
     val messages: StateFlow<List<SosMessage>> = repository.messages
     val activeIncomingAlert: StateFlow<SosMessage?> = repository.activeIncomingAlert
