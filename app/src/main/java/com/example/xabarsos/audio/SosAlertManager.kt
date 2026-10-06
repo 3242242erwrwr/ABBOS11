@@ -6,6 +6,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Build
+import android.os.PowerManager
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.os.VibrationEffect
@@ -40,7 +41,19 @@ class SosAlertManager(private val context: Context) {
         if (isRinging) return
         isRinging = true
 
-        // 1. AUTOMATICALLY MAXIMIZE VOLUME TO 100% FOR EMERGENCY SOS
+        // 1. WAKE UP SCREEN IF DARK/LOCKED AND MAXIMIZE VOLUME TO 100% FOR EMERGENCY SOS
+        try {
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            @Suppress("DEPRECATION")
+            val screenWakeLock = powerManager.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE,
+                "XABARSOS::WakeUpScreenEmergency"
+            )
+            screenWakeLock.acquire(10000) // Wake screen up for 10 seconds
+        } catch (e: Exception) {
+            Log.e("SosAlertManager", "Error waking up screen: ${e.message}")
+        }
+
         try {
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
             audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
