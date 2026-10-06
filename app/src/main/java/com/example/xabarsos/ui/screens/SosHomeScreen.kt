@@ -81,7 +81,6 @@ fun SosHomeScreen(
     val soundType by viewModel.soundType.collectAsState()
     val friendsList by viewModel.friendsList.collectAsState()
     val connectionStatus by viewModel.connectionStatus.collectAsState()
-    val isScanningBluetooth by viewModel.isScanningBluetooth.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", android.content.Context.MODE_PRIVATE) }
@@ -121,7 +120,7 @@ fun SosHomeScreen(
                     }
                     Box(
                         modifier = Modifier
-                            .padding(end = 4.dp)
+                            .padding(end = 8.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(statusColor.copy(alpha = 0.2f))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -138,32 +137,6 @@ fun SosHomeScreen(
                             Text(
                                 text = if (connectionStatus is ConnectionStatus.Connected) "Internet" else "Oflayn",
                                 color = statusColor,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    // Bluetooth Badge
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF00B0FF).copy(alpha = 0.2f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (isScanningBluetooth) Icons.AutoMirrored.Filled.BluetoothSearching else Icons.Default.Bluetooth,
-                                contentDescription = null,
-                                tint = Color(0xFF00B0FF),
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Blutuz",
-                                color = Color(0xFF00B0FF),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
