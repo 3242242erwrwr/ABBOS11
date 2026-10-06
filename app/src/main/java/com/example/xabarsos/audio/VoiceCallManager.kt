@@ -264,7 +264,7 @@ class VoiceCallManager(private val context: Context) {
             audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
             audioManager.isSpeakerphoneOn = _isSpeakerOn.value
 
-            // 1. Create Low-Latency AudioRecord
+            // 1. Create Low-Latency AudioRecord with fallback
             if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                 val minRecSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_IN, ENCODING)
                 if (minRecSize > 0) {
@@ -277,7 +277,17 @@ class VoiceCallManager(private val context: Context) {
                             maxOf(minRecSize * 2, FRAME_SIZE_SHORTS * 4)
                         )
                     } catch (t: Throwable) {
-                        Log.e("VoiceCallManager", "Error creating AudioRecord: ${t.message}")
+                        try {
+                            audioRecord = AudioRecord(
+                                MediaRecorder.AudioSource.MIC,
+                                SAMPLE_RATE,
+                                CHANNEL_IN,
+                                ENCODING,
+                                maxOf(minRecSize * 2, FRAME_SIZE_SHORTS * 4)
+                            )
+                        } catch (t2: Throwable) {
+                            Log.e("VoiceCallManager", "Error creating AudioRecord MIC fallback: ${t2.message}")
+                        }
                     }
                 }
             }

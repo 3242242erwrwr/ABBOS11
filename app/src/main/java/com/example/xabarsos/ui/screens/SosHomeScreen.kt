@@ -344,6 +344,16 @@ fun SosHomeScreen(
         )
     }
 
+    val acceptAudioPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.acceptVoiceCall()
+        } else {
+            viewModel.rejectOrEndVoiceCall()
+        }
+    }
+
     if (callState != CallState.IDLE) {
         VoiceCallDialog(
             callState = callState,
@@ -351,7 +361,13 @@ fun SosHomeScreen(
             isMuted = isMuted,
             isSpeakerOn = isSpeakerOn,
             durationSeconds = callDurationSeconds,
-            onAcceptCall = { viewModel.acceptVoiceCall() },
+            onAcceptCall = {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    viewModel.acceptVoiceCall()
+                } else {
+                    acceptAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            },
             onRejectOrEndCall = { viewModel.rejectOrEndVoiceCall() },
             onToggleMute = { viewModel.toggleMute() },
             onToggleSpeaker = { viewModel.toggleSpeaker() },
