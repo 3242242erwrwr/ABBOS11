@@ -79,42 +79,48 @@ class SosRepository(private val context: Context) {
 
         // Setup listener for custom signaling (Voice Calls)
         webSocketManager.setOnCustomJsonReceivedListener { jsonObj ->
-            if (jsonObj.has("type")) {
-                val type = jsonObj.get("type").asString
-                val myName = getUserName().trim()
-                val target = jsonObj.get("targetRecipient")?.asString?.trim() ?: ""
+            try {
+                if (jsonObj.has("type") && !jsonObj.get("type").isJsonNull) {
+                    val type = jsonObj.get("type").asString
+                    val myName = getUserName().trim()
+                    val target = if (jsonObj.has("targetRecipient") && !jsonObj.get("targetRecipient").isJsonNull) {
+                        jsonObj.get("targetRecipient").asString.trim()
+                    } else ""
 
-                val isForMe = target.equals("BARCHAGA", ignoreCase = true)
-                        || target.equals("ALL", ignoreCase = true)
-                        || target.isEmpty()
-                        || target.equals(myName, ignoreCase = true)
-                        || myName.contains(target, ignoreCase = true)
+                    val isForMe = target.equals("BARCHAGA", ignoreCase = true)
+                            || target.equals("ALL", ignoreCase = true)
+                            || target.isEmpty()
+                            || target.equals(myName, ignoreCase = true)
+                            || myName.contains(target, ignoreCase = true)
 
-                if (isForMe) {
-                    when (type) {
-                        "call_offer" -> {
-                            val callId = jsonObj.get("callId")?.asString ?: ""
-                            val callerName = jsonObj.get("senderName")?.asString ?: "Noma'lum"
-                            val callerDeviceId = jsonObj.get("senderDeviceId")?.asString ?: ""
-                            if (callerDeviceId != getDeviceId()) {
-                                voiceCallManager.receiveIncomingCall(callId, callerName, callerDeviceId)
+                    if (isForMe) {
+                        when (type) {
+                            "call_offer" -> {
+                                val callId = if (jsonObj.has("callId") && !jsonObj.get("callId").isJsonNull) jsonObj.get("callId").asString else ""
+                                val callerName = if (jsonObj.has("senderName") && !jsonObj.get("senderName").isJsonNull) jsonObj.get("senderName").asString else "Noma'lum"
+                                val callerDeviceId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
+                                if (callerDeviceId != getDeviceId()) {
+                                    voiceCallManager.receiveIncomingCall(callId, callerName, callerDeviceId)
+                                }
                             }
-                        }
-                        "call_answer" -> {
-                            voiceCallManager.onCallAcceptedByPeer()
-                        }
-                        "call_reject", "call_hangup" -> {
-                            voiceCallManager.rejectOrEndCall()
-                        }
-                        "voice_audio" -> {
-                            val audioData = jsonObj.get("audioData")?.asString ?: ""
-                            val callerDeviceId = jsonObj.get("senderDeviceId")?.asString ?: ""
-                            if (callerDeviceId != getDeviceId() && audioData.isNotEmpty()) {
-                                voiceCallManager.onAudioChunkReceived(audioData)
+                            "call_answer" -> {
+                                voiceCallManager.onCallAcceptedByPeer()
+                            }
+                            "call_reject", "call_hangup" -> {
+                                voiceCallManager.rejectOrEndCall()
+                            }
+                            "voice_audio" -> {
+                                val audioData = if (jsonObj.has("audioData") && !jsonObj.get("audioData").isJsonNull) jsonObj.get("audioData").asString else ""
+                                val callerDeviceId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
+                                if (callerDeviceId != getDeviceId() && audioData.isNotEmpty()) {
+                                    voiceCallManager.onAudioChunkReceived(audioData)
+                                }
                             }
                         }
                     }
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("SosRepository", "Error handling custom json signaling: ${e.message}")
             }
         }
 

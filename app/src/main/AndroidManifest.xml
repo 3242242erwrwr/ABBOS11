@@ -25,7 +25,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
     <!-- Bluetooth permissions for Offline SOS messaging without mobile operator -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -55,7 +54,7 @@
             android:name=".service.SosForegroundService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="connectedDevice|dataSync|microphone" />
+            android:foregroundServiceType="connectedDevice|dataSync" />
 
         <receiver
             android:name=".notification.SosNotificationActionReceiver"
