@@ -253,6 +253,9 @@ fun SosHomeScreen(
                         onOpenAddFriendDialog = { showAddFriendDialog = true },
                         onSendSos = { sosText, targetRecipient ->
                             viewModel.sendSos(sosText, targetRecipient)
+                        },
+                        onStopAllAlerts = {
+                            viewModel.dismissActiveAlert()
                         }
                     )
 

@@ -81,6 +81,14 @@ class SosRepository(private val context: Context) {
         val myDeviceId = getDeviceId()
         val myName = getUserName().trim()
 
+        // Check if message is a STOP signal
+        val isStopSignal = sosMessage.messageText.contains("STOP", ignoreCase = true)
+                || sosMessage.messageText.contains("BEKOR QILINDI", ignoreCase = true)
+
+        if (isStopSignal) {
+            dismissActiveAlert()
+        }
+
         // 1. IF THIS MESSAGE WAS SENT FROM THIS EXACT PHYSICAL DEVICE ID, DO NOT PLAY ALARM OR NOTIFICATION!
         if (sosMessage.deviceId.isNotBlank() && sosMessage.deviceId == myDeviceId) {
             if (currentList.none { it.id == sosMessage.id }) {

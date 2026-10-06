@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -49,7 +50,8 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 fun QuickSosButtons(
     friendsList: List<String>,
     onOpenAddFriendDialog: () -> Unit,
-    onSendSos: (text: String, recipient: String) -> Unit
+    onSendSos: (text: String, recipient: String) -> Unit,
+    onStopAllAlerts: () -> Unit
 ) {
     var customMessage by remember { mutableStateOf("") }
     var selectedRecipient by remember { mutableStateOf("BARCHAGA") }
@@ -201,6 +203,37 @@ fun QuickSosButtons(
                 Text(
                     text = "🚨 JASMINAHON QANI",
                     fontSize = 19.sp,
+                    fontWeight = FontWeight.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 🛑 AUXILIARY EMERGENCY STOP BUTTON (YORDAMCHI STOP KNOPKASI)
+            Button(
+                onClick = {
+                    onStopAllAlerts()
+                    onSendSos("🛑 SOS BEKOR QILINDI (STOP)", selectedRecipient)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF9100),
+                    contentColor = Color.Black
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Cancel,
+                    contentDescription = "Stop",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.Black
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "🛑 STOP (SOS VA SIRENANI TO'XTATISH)",
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Black
                 )
             }
