@@ -33,11 +33,20 @@ sealed class ConnectionStatus {
 class WebSocketSosManager(
     private var serverBaseUrl: String = "https://xabar-sos.onrender.com"
 ) {
+    // Client for persistent WebSocket
     private val client = OkHttpClient.Builder()
-        .connectTimeout(8, TimeUnit.SECONDS)
+        .connectTimeout(5, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS)
-        .writeTimeout(8, TimeUnit.SECONDS)
-        .pingInterval(5, TimeUnit.SECONDS) // Keep WebSocket alive every 5 seconds
+        .writeTimeout(5, TimeUnit.SECONDS)
+        .pingInterval(3, TimeUnit.SECONDS) // Fast 3s Ping for 4G CGNAT NAT Keep-Alive
+        .retryOnConnectionFailure(true)
+        .build()
+
+    // Fast-client for instant HTTP REST requests & polling
+    private val fastHttpClient = OkHttpClient.Builder()
+        .connectTimeout(2, TimeUnit.SECONDS)
+        .readTimeout(2, TimeUnit.SECONDS)
+        .writeTimeout(2, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .build()
 
@@ -75,7 +84,7 @@ class WebSocketSosManager(
     private fun startConnectionWatcher() {
         scope.launch {
             while (true) {
-                delay(2000) // Every 2 seconds verify connection is active
+                delay(1500) // Every 1.5s verify connection is active
                 if (_connectionStatus.value !is ConnectionStatus.Connected) {
                     connect()
                 }
@@ -170,7 +179,7 @@ class WebSocketSosManager(
             try {
                 val pollUrl = "$serverBaseUrl/api/sos/recent?since=$sinceTimestamp"
                 val request = Request.Builder().url(pollUrl).get().build()
-                client.newCall(request).execute().use { response ->
+                fastHttpClient.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
                         val bodyStr = response.body?.string() ?: ""
                         val jsonObj = gson.fromJson(bodyStr, JsonObject::class.java)
@@ -219,7 +228,7 @@ class WebSocketSosManager(
         // 1. Try WebSocket sending if connected
         val wsSent = webSocket?.send(messageJson) == true
 
-        // 2. HTTP REST Broadcast fallback in background
+        // 2. HTTP REST Broadcast fallback in background (using fastHttpClient)
         scope.launch {
             try {
                 val httpUrl = "$serverBaseUrl/api/sos"
@@ -228,7 +237,7 @@ class WebSocketSosManager(
                     .url(httpUrl)
                     .post(body)
                     .build()
-                client.newCall(request).execute().use { response ->
+                fastHttpClient.newCall(request).execute().use { response ->
                     Log.d("WebSocketSosManager", "HTTP POST fallback result: ${response.code}")
                     if (response.isSuccessful) {
                         _connectionStatus.value = ConnectionStatus.Connected

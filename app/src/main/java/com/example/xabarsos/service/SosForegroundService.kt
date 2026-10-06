@@ -138,7 +138,7 @@ class SosForegroundService : Service() {
     private fun startBackgroundSyncLoop() {
         serviceScope.launch {
             while (true) {
-                delay(2000) // Every 2 seconds sync recent SOS messages via HTTP REST
+                delay(1000) // Fast 1-second background HTTP REST sync loop
                 try {
                     val currentRepo = repository ?: continue
                     currentRepo.webSocketManager.fetchRecentSosMessagesHttp(0) { newMsgs ->
