@@ -1,5 +1,6 @@
 package com.example.xabarsos.service
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,6 +16,7 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.xabarsos.MainActivity
@@ -90,7 +92,7 @@ class SosForegroundService : Service() {
         // 5. Register System Network Callback to immediately reconnect when internet turns ON
         registerNetworkCallback()
 
-        // 6. Start 2-second HTTP REST Sync Loop for 100% Guarantee
+        // 6. Start 1-second HTTP REST Sync Loop for 100% Guarantee
         startBackgroundSyncLoop()
     }
 
@@ -156,6 +158,26 @@ class SosForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // Return START_STICKY so Android automatically restarts service if killed
         return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        Log.d("SosForegroundService", "onTaskRemoved: App swiped away. Auto-restarting background service...")
+        try {
+            val restartServiceIntent = Intent(applicationContext, SosForegroundService::class.java)
+            val restartServicePendingIntent = PendingIntent.getService(
+                applicationContext, 1, restartServiceIntent,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val alarmService = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmService.set(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 1000,
+                restartServicePendingIntent
+            )
+        } catch (e: Exception) {
+            Log.e("SosForegroundService", "Error auto-restarting service: ${e.message}")
+        }
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
