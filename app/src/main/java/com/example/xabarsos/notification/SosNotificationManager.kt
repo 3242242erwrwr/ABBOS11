@@ -18,7 +18,7 @@ import com.example.xabarsos.model.SosMessage
 class SosNotificationManager(private val context: Context) {
 
     companion object {
-        const val HEADS_UP_CHANNEL_ID = "xabar_sos_popup_banner_v4"
+        const val HEADS_UP_CHANNEL_ID = "xabar_sos_telegram_popup_v6"
         const val EMERGENCY_NOTIFICATION_ID = 9999
         const val ACTION_DISMISS_ALARM = "com.example.xabarsos.ACTION_DISMISS_ALARM"
     }
@@ -43,10 +43,10 @@ class SosNotificationManager(private val context: Context) {
 
             val channel = NotificationChannel(
                 HEADS_UP_CHANNEL_ID,
-                "🚨 Emergency SOS Heads-Up Popup Alerts",
+                "🚨 Telegram Style SOS Popup Banners",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Telefon tepasida SMS kabi pop-up bo'lib tushuvchi shoshilinch SOS xabarnomasi"
+                description = "Telegram kabi ekran tepasidan ovoz bilan tushuvchi zudlikli SOS xabarnomasi"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 800)
                 setSound(alarmUri, audioAttributes)
@@ -67,7 +67,7 @@ class SosNotificationManager(private val context: Context) {
         }
         val contentPendingIntent = PendingIntent.getActivity(
             context,
-            0,
+            sosMessage.id.hashCode(),
             contentIntent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -78,7 +78,7 @@ class SosNotificationManager(private val context: Context) {
         }
         val dismissPendingIntent = PendingIntent.getBroadcast(
             context,
-            1,
+            sosMessage.id.hashCode() + 1,
             dismissIntent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -94,16 +94,16 @@ class SosNotificationManager(private val context: Context) {
                 NotificationCompat.BigTextStyle()
                     .bigText("Yuboruvchi: ${sosMessage.senderName}\nXabar: ${sosMessage.messageText}\nQabul qiluvchi: ${sosMessage.targetRecipient}")
             )
-            .setPriority(NotificationCompat.PRIORITY_MAX) // High Priority for Heads-Up Pop-up Banner at TOP
-            .setCategory(NotificationCompat.CATEGORY_CALL) // CATEGORY_CALL forces SMS/Call style Heads-Up pop-up banner at top
+            .setPriority(NotificationCompat.PRIORITY_MAX) // Telegram style High Priority Heads-Up Pop-up
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE) // CATEGORY_MESSAGE drops down top banner exactly like Telegram
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(contentPendingIntent)
             .setFullScreenIntent(contentPendingIntent, true) // Force Heads-Up Banner at TOP of screen!
             .setSound(alarmUri)
             .setVibrate(longArrayOf(0, 500, 200, 500, 200, 800))
-            .setOngoing(true) // Stays visible until dismissed
-            .setAutoCancel(false)
+            .setOngoing(false) // Non-ongoing so Android System UI drops down top animated pop-up banner!
+            .setAutoCancel(true)
             .addAction(
                 R.mipmap.ic_launcher,
                 "🛑 BEKOR QILISH",
@@ -115,10 +115,11 @@ class SosNotificationManager(private val context: Context) {
                 contentPendingIntent
             )
 
-        notificationManager.notify(EMERGENCY_NOTIFICATION_ID, builder.build())
+        val notificationId = Math.abs(sosMessage.id.hashCode())
+        notificationManager.notify(notificationId, builder.build())
     }
 
     fun cancelEmergencyNotification() {
-        notificationManager.cancel(EMERGENCY_NOTIFICATION_ID)
+        notificationManager.cancelAll()
     }
 }
