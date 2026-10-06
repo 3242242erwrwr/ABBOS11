@@ -112,6 +112,16 @@ fun SosHomeScreen(
         }
     }
 
+    val acceptAudioPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.acceptVoiceCall()
+        } else {
+            viewModel.rejectOrEndVoiceCall()
+        }
+    }
+
     val checkAndStartVoiceCall: (String) -> Unit = { friendName ->
         targetCallFriend = friendName
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
@@ -342,16 +352,6 @@ fun SosHomeScreen(
             onRemoveFriend = { name -> viewModel.removeFriend(name) },
             onDismiss = { showAddFriendDialog = false }
         )
-    }
-
-    val acceptAudioPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            viewModel.acceptVoiceCall()
-        } else {
-            viewModel.rejectOrEndVoiceCall()
-        }
     }
 
     if (callState != CallState.IDLE) {
