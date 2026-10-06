@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
@@ -17,7 +18,7 @@ import com.example.xabarsos.model.SosMessage
 class SosNotificationManager(private val context: Context) {
 
     companion object {
-        const val HEADS_UP_CHANNEL_ID = "xabar_sos_emergency_heads_up_v2"
+        const val HEADS_UP_CHANNEL_ID = "xabar_sos_popup_banner_v4"
         const val EMERGENCY_NOTIFICATION_ID = 9999
         const val ACTION_DISMISS_ALARM = "com.example.xabarsos.ACTION_DISMISS_ALARM"
     }
@@ -33,6 +34,8 @@ class SosNotificationManager(private val context: Context) {
     private fun createHighPriorityNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
             val audioAttributes = AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .setUsage(AudioAttributes.USAGE_ALARM)
@@ -40,13 +43,15 @@ class SosNotificationManager(private val context: Context) {
 
             val channel = NotificationChannel(
                 HEADS_UP_CHANNEL_ID,
-                "🚨 Emergency SOS Heads-Up Alerts",
+                "🚨 Emergency SOS Heads-Up Popup Alerts",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Telefon tepasida zudlik bilan pop-up bo'lib chiquvchi SOS xabarnomasi"
+                description = "Telefon tepasida SMS kabi pop-up bo'lib tushuvchi shoshilinch SOS xabarnomasi"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 800)
                 setSound(alarmUri, audioAttributes)
+                enableLights(true)
+                lightColor = Color.RED
                 setBypassDnd(true) // Bypass Do Not Disturb mode
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
@@ -58,7 +63,7 @@ class SosNotificationManager(private val context: Context) {
     fun showHeadsUpSosNotification(sosMessage: SosMessage) {
         // PendingIntent to launch app when notification clicked
         val contentIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val contentPendingIntent = PendingIntent.getActivity(
             context,
@@ -79,6 +84,7 @@ class SosNotificationManager(private val context: Context) {
         )
 
         val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val builder = NotificationCompat.Builder(context, HEADS_UP_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -88,9 +94,10 @@ class SosNotificationManager(private val context: Context) {
                 NotificationCompat.BigTextStyle()
                     .bigText("Yuboruvchi: ${sosMessage.senderName}\nXabar: ${sosMessage.messageText}\nQabul qiluvchi: ${sosMessage.targetRecipient}")
             )
-            .setPriority(NotificationCompat.PRIORITY_MAX) // High Priority for Heads-Up Pop-up at top
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setPriority(NotificationCompat.PRIORITY_MAX) // High Priority for Heads-Up Pop-up Banner at TOP
+            .setCategory(NotificationCompat.CATEGORY_CALL) // CATEGORY_CALL forces SMS/Call style Heads-Up pop-up banner at top
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(contentPendingIntent)
             .setFullScreenIntent(contentPendingIntent, true) // Force Heads-Up Banner at TOP of screen!
             .setSound(alarmUri)
@@ -99,7 +106,7 @@ class SosNotificationManager(private val context: Context) {
             .setAutoCancel(false)
             .addAction(
                 R.mipmap.ic_launcher,
-                "🛑 BEKOR QILISH / O'CHIRISH",
+                "🛑 BEKOR QILISH",
                 dismissPendingIntent
             )
             .addAction(

@@ -42,7 +42,6 @@ class SosForegroundService : Service() {
     private var wifiLock: WifiManager.WifiLock? = null
     private var repository: SosRepository? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
-    private var lastPolledTimestamp = System.currentTimeMillis() - 60000 // Last 1 min
 
     override fun onCreate() {
         super.onCreate()
@@ -93,11 +92,8 @@ class SosForegroundService : Service() {
                 delay(2000) // Every 2 seconds sync recent SOS messages via HTTP REST
                 try {
                     val currentRepo = repository ?: continue
-                    currentRepo.webSocketManager.fetchRecentSosMessagesHttp(lastPolledTimestamp) { newMsgs ->
+                    currentRepo.webSocketManager.fetchRecentSosMessagesHttp(0) { newMsgs ->
                         newMsgs.forEach { msg ->
-                            if (msg.timestamp > lastPolledTimestamp) {
-                                lastPolledTimestamp = msg.timestamp
-                            }
                             currentRepo.processIncomingSosMessage(msg)
                         }
                     }
