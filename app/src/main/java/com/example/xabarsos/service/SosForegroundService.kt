@@ -89,7 +89,7 @@ class SosForegroundService : Service() {
         // 4. Instantiate Repository to keep WebSocket & Bluetooth connected 24/7
         repository = SosRepository.getInstance(applicationContext)
 
-        // 5. Register System Network Callback to immediately reconnect when internet turns ON
+        // 5. Register System Network Callback to immediately reconnect when Wi-Fi or 4G turns ON
         registerNetworkCallback()
 
         // 6. Start 1-second HTTP REST Sync Loop for 100% Guarantee
@@ -106,19 +106,47 @@ class SosForegroundService : Service() {
             networkCallback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     super.onAvailable(network)
-                    Log.d("SosForegroundService", "Internet reconnected! Forcing WebSocket reconnect...")
-                    repository?.webSocketManager?.reconnect()
-                    triggerImmediateSync()
+                    Log.d("SosForegroundService", "Wi-Fi / Mobile Network Available. Restoring connection...")
+                    handleNetworkRestored()
+                }
+
+                override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                    super.onCapabilitiesChanged(network, networkCapabilities)
+                    if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+                        Log.d("SosForegroundService", "Wi-Fi / Mobile Internet Validated. Syncing...")
+                        handleNetworkRestored()
+                    }
                 }
 
                 override fun onLost(network: Network) {
                     super.onLost(network)
-                    Log.d("SosForegroundService", "Internet connection lost")
+                    Log.d("SosForegroundService", "Network connection lost")
                 }
             }
             connectivityManager.registerNetworkCallback(request, networkCallback!!)
         } catch (e: Exception) {
             Log.e("SosForegroundService", "Error registering network callback: ${e.message}")
+        }
+    }
+
+    private fun handleNetworkRestored() {
+        serviceScope.launch {
+            try {
+                if (wifiLock?.isHeld == false) {
+                    wifiLock?.acquire()
+                }
+            } catch (e: Exception) {}
+
+            repository?.webSocketManager?.reconnect()
+            triggerImmediateSync()
+
+            delay(1000)
+            repository?.webSocketManager?.reconnect()
+            triggerImmediateSync()
+
+            delay(2000)
+            repository?.webSocketManager?.reconnect()
+            triggerImmediateSync()
         }
     }
 
