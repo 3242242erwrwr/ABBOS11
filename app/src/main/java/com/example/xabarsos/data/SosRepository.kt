@@ -152,7 +152,9 @@ class SosRepository(private val context: Context) {
     fun sendSos(messageText: String, targetRecipient: String = "BARCHAGA") {
         val currentSender = getUserName()
         val myDeviceId = getDeviceId()
-        val formattedTarget = targetRecipient.trim().ifEmpty { "BARCHAGA" }
+
+        val isStop = messageText.contains("STOP", ignoreCase = true) || messageText.contains("BEKOR QILINDI", ignoreCase = true)
+        val formattedTarget = if (isStop) "BARCHAGA" else targetRecipient.trim().ifEmpty { "BARCHAGA" }
 
         val sosMessage = SosMessage(
             senderName = currentSender,
@@ -171,8 +173,8 @@ class SosRepository(private val context: Context) {
         currentList.add(0, sosMessage)
         _messages.value = currentList
 
-        // If sending STOP message, update mute timestamp locally
-        if (messageText.contains("STOP", ignoreCase = true) || messageText.contains("BEKOR QILINDI", ignoreCase = true)) {
+        // If sending STOP message, update mute timestamp locally & stop all sound
+        if (isStop) {
             dismissActiveAlert()
         }
 
