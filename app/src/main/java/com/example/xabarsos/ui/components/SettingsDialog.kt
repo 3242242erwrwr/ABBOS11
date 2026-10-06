@@ -35,12 +35,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xabarsos.audio.SosSoundType
 import com.example.xabarsos.ui.theme.DarkCardContainer
 import com.example.xabarsos.ui.theme.EmergencyRed
+import com.example.xabarsos.utils.ManufacturerPowerUtil
 
 @Composable
 fun SettingsDialog(
@@ -52,6 +54,7 @@ fun SettingsDialog(
     onStopTestSound: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf(currentName) }
     var serverUrl by remember { mutableStateOf(currentServerUrl) }
     var selectedSoundType by remember { mutableStateOf(currentSoundType) }
@@ -107,6 +110,45 @@ fun SettingsDialog(
                         unfocusedBorderColor = Color(0xFF333344)
                     )
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // MANUFACTURER AUTOSTART & BACKGROUND PERMISSION HELPER
+                Text(
+                    text = "📱 HAR QANDAY TELEFONDA 100% ISHLASHI UCHUN SOZLASH:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFFFFD54F),
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        ManufacturerPowerUtil.openAutoStartSettings(context)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFF00E676)
+                    )
+                ) {
+                    Text("⚡ AUTO-START (AVTOZAPUSK) RUXSATINI BERISH", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        ManufacturerPowerUtil.openDisplayOverAppsSettings(context)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFF00B0FF)
+                    )
+                ) {
+                    Text("📱 BOSHQA ILOVALAR USTIDA KO'RINISH", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -175,13 +217,6 @@ fun SettingsDialog(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "⚡ Eslatma: SOS xabari kelganda telefon ovozi avtomatik MAXIMUM (100%) balandlikka ko'tariladi!",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFFFD54F)
-                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
