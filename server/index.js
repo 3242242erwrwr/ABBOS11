@@ -3,7 +3,7 @@ const http = require('http');
 const WebSocket = require('ws');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Enable CORS for all mobile networks and origin domains
 app.use((req, res, next) => {
@@ -20,7 +20,7 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: '/ws' });
 
 let connectedClients = new Set();
-let recentSosMessages = []; // Store recent messages for HTTP polling fallback
+let recentSosMessages = []; // Store only recent SOS emergency messages for HTTP polling fallback
 
 wss.on('connection', (ws) => {
     connectedClients.add(ws);
@@ -34,10 +34,16 @@ wss.on('connection', (ws) => {
     ws.on('message', (data) => {
         try {
             const parsed = JSON.parse(data.toString());
-            console.log(`[XABAR-SOS] Received SOS message:`, parsed);
 
-            if (parsed.messageText || parsed.senderName) {
-                saveAndBroadcast(parsed);
+            const typeStr = parsed.type || '';
+            const isCallOrVoice = typeStr === 'ping' || typeStr.startsWith('call_') || typeStr.startsWith('voice_');
+
+            if (isCallOrVoice) {
+                // Live broadcast only - DO NOT store in SOS message buffer!
+                broadcastLive(parsed);
+            } else if (parsed.messageText) {
+                // Actual SOS Emergency Message
+                saveAndBroadcastSos(parsed);
             }
         } catch (e) {
             console.error('[XABAR-SOS] Error parsing message:', e.message);
@@ -65,18 +71,8 @@ setInterval(() => {
     });
 }, 5000);
 
-function saveAndBroadcast(messageObj) {
-    if (!messageObj.timestamp) {
-        messageObj.timestamp = Date.now();
-    }
-
-    // Keep last 50 messages
-    recentSosMessages.unshift(messageObj);
-    if (recentSosMessages.length > 50) {
-        recentSosMessages = recentSosMessages.slice(0, 50);
-    }
-
-    const jsonString = JSON.stringify(messageObj);
+function broadcastLive(payloadObj) {
+    const jsonString = typeof payloadObj === 'string' ? payloadObj : JSON.stringify(payloadObj);
     connectedClients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
             try {
@@ -86,19 +82,37 @@ function saveAndBroadcast(messageObj) {
     });
 }
 
+function saveAndBroadcastSos(messageObj) {
+    if (!messageObj.timestamp) {
+        messageObj.timestamp = Date.now();
+    }
+
+    // Keep last 50 SOS messages
+    recentSosMessages.unshift(messageObj);
+    if (recentSosMessages.length > 50) {
+        recentSosMessages = recentSosMessages.slice(0, 50);
+    }
+
+    broadcastLive(messageObj);
+}
+
 // REST API Broadcast
 app.post('/api/sos', (req, res) => {
     const sosData = req.body;
-    console.log('[XABAR-SOS] HTTP POST received SOS:', sosData);
 
-    if (sosData && (sosData.messageText || sosData.senderName)) {
-        saveAndBroadcast(sosData);
+    if (sosData) {
+        const typeStr = sosData.type || '';
+        if (typeStr.startsWith('call_') || typeStr.startsWith('voice_')) {
+            broadcastLive(sosData);
+        } else if (sosData.messageText) {
+            saveAndBroadcastSos(sosData);
+        }
         return res.json({ status: 'ok', broadcastedTo: connectedClients.size });
     }
-    return res.status(400).json({ error: 'Invalid SOS payload' });
+    return res.status(400).json({ error: 'Invalid payload' });
 });
 
-// REST API Polling Fallback (Get recent messages since timestamp)
+// REST API Polling Fallback (Get recent SOS messages since timestamp)
 app.get('/api/sos/recent', (req, res) => {
     const since = parseInt(req.query.since || '0', 10);
     const newMessages = recentSosMessages.filter(m => (m.timestamp || 0) > since);
@@ -112,7 +126,7 @@ app.get('/', (req, res) => {
                 <h1 style="color: #ff3d00;">🚨 XABAR SOS Server Active</h1>
                 <p>Status: Running on Render (24/7 Always Active)</p>
                 <p>Connected Active Android Devices: <strong>${connectedClients.size}</strong></p>
-                <p>Total Cached Messages: <strong>${recentSosMessages.length}</strong></p>
+                <p>Total Cached SOS Messages: <strong>${recentSosMessages.length}</strong></p>
                 <p>WebSocket Path: <code>/ws</code></p>
             </body>
         </html>

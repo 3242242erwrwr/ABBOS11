@@ -105,7 +105,6 @@ class WebSocketSosManager(
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                Log.d("WebSocketSosManager", "Message received: $text")
                 _connectionStatus.value = ConnectionStatus.Connected
                 try {
                     val messageObj = gson.fromJson(text, JsonObject::class.java)
@@ -113,23 +112,30 @@ class WebSocketSosManager(
                     // Forward custom json signal (voice calls, signaling)
                     onCustomJsonReceivedListener?.invoke(messageObj)
 
-                    // Skip server heartbeat ping frames
-                    if (messageObj.has("type") && messageObj.get("type").asString == "ping") {
-                        return
+                    // CRITICAL ISOLATION FIX: Skip all ping, voice_audio, and call_ signaling frames from SOS message handler!
+                    if (messageObj.has("type")) {
+                        val typeStr = messageObj.get("type")?.asString ?: ""
+                        if (typeStr == "ping" || typeStr.startsWith("call_") || typeStr.startsWith("voice_")) {
+                            return
+                        }
                     }
 
-                    if (messageObj.has("messageText") || messageObj.has("senderName")) {
-                        val sosMessage = SosMessage(
-                            id = messageObj.get("id")?.asString ?: java.util.UUID.randomUUID().toString(),
-                            deviceId = messageObj.get("deviceId")?.asString ?: "",
-                            senderName = messageObj.get("senderName")?.asString ?: "Noma'lum",
-                            messageText = messageObj.get("messageText")?.asString ?: "SOS!",
-                            targetRecipient = messageObj.get("targetRecipient")?.asString ?: "BARCHAGA",
-                            timestamp = messageObj.get("timestamp")?.asLong ?: System.currentTimeMillis(),
-                            channel = MessageChannel.INTERNET,
-                            isIncoming = true
-                        )
-                        onMessageReceivedListener?.invoke(sosMessage)
+                    // ONLY process actual SOS emergency messages
+                    if (messageObj.has("messageText")) {
+                        val msgText = messageObj.get("messageText")?.asString ?: ""
+                        if (msgText.isNotBlank()) {
+                            val sosMessage = SosMessage(
+                                id = messageObj.get("id")?.asString ?: java.util.UUID.randomUUID().toString(),
+                                deviceId = messageObj.get("deviceId")?.asString ?: "",
+                                senderName = messageObj.get("senderName")?.asString ?: "Noma'lum",
+                                messageText = msgText,
+                                targetRecipient = messageObj.get("targetRecipient")?.asString ?: "BARCHAGA",
+                                timestamp = messageObj.get("timestamp")?.asLong ?: System.currentTimeMillis(),
+                                channel = MessageChannel.INTERNET,
+                                isIncoming = true
+                            )
+                            onMessageReceivedListener?.invoke(sosMessage)
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e("WebSocketSosManager", "Error parsing WebSocket message: ${e.message}")
@@ -193,11 +199,25 @@ class WebSocketSosManager(
                         val parsedList = mutableListOf<SosMessage>()
                         for (i in 0 until messagesArray.size()) {
                             val msgObj = messagesArray.get(i).asJsonObject
+
+                            // SKIP voice call signals from HTTP polling
+                            if (msgObj.has("type")) {
+                                val typeStr = msgObj.get("type")?.asString ?: ""
+                                if (typeStr == "ping" || typeStr.startsWith("call_") || typeStr.startsWith("voice_")) {
+                                    continue
+                                }
+                            }
+
+                            val msgText = msgObj.get("messageText")?.asString ?: ""
+                            if (msgText.isBlank()) {
+                                continue
+                            }
+
                             val sosMsg = SosMessage(
                                 id = msgObj.get("id")?.asString ?: java.util.UUID.randomUUID().toString(),
                                 deviceId = msgObj.get("deviceId")?.asString ?: "",
                                 senderName = msgObj.get("senderName")?.asString ?: "Noma'lum",
-                                messageText = msgObj.get("messageText")?.asString ?: "SOS!",
+                                messageText = msgText,
                                 targetRecipient = msgObj.get("targetRecipient")?.asString ?: "BARCHAGA",
                                 timestamp = msgObj.get("timestamp")?.asLong ?: System.currentTimeMillis(),
                                 channel = MessageChannel.INTERNET,
