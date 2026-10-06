@@ -7,6 +7,10 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.IBinder
@@ -41,6 +45,7 @@ class SosForegroundService : Service() {
     private var partialWakeLock: PowerManager.WakeLock? = null
     private var wifiLock: WifiManager.WifiLock? = null
     private var repository: SosRepository? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
 
     override fun onCreate() {
@@ -82,8 +87,52 @@ class SosForegroundService : Service() {
         // 4. Instantiate Repository to keep WebSocket & Bluetooth connected 24/7
         repository = SosRepository.getInstance(applicationContext)
 
-        // 5. Start 2-second HTTP REST Sync Loop for 100% Guarantee
+        // 5. Register System Network Callback to immediately reconnect when internet turns ON
+        registerNetworkCallback()
+
+        // 6. Start 2-second HTTP REST Sync Loop for 100% Guarantee
         startBackgroundSyncLoop()
+    }
+
+    private fun registerNetworkCallback() {
+        try {
+            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+
+            networkCallback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    super.onAvailable(network)
+                    Log.d("SosForegroundService", "Internet reconnected! Forcing WebSocket reconnect...")
+                    repository?.webSocketManager?.reconnect()
+                    triggerImmediateSync()
+                }
+
+                override fun onLost(network: Network) {
+                    super.onLost(network)
+                    Log.d("SosForegroundService", "Internet connection lost")
+                }
+            }
+            connectivityManager.registerNetworkCallback(request, networkCallback!!)
+        } catch (e: Exception) {
+            Log.e("SosForegroundService", "Error registering network callback: ${e.message}")
+        }
+    }
+
+    private fun triggerImmediateSync() {
+        serviceScope.launch {
+            try {
+                val currentRepo = repository ?: return@launch
+                currentRepo.webSocketManager.fetchRecentSosMessagesHttp(0) { newMsgs ->
+                    newMsgs.forEach { msg ->
+                        currentRepo.processIncomingSosMessage(msg)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("SosForegroundService", "Error in immediate sync: ${e.message}")
+            }
+        }
     }
 
     private fun startBackgroundSyncLoop() {
@@ -120,6 +169,10 @@ class SosForegroundService : Service() {
             }
             if (wifiLock?.isHeld == true) {
                 wifiLock?.release()
+            }
+            networkCallback?.let {
+                val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                connectivityManager.unregisterNetworkCallback(it)
             }
         } catch (e: Exception) {
             Log.e("SosForegroundService", "Error releasing locks: ${e.message}")
