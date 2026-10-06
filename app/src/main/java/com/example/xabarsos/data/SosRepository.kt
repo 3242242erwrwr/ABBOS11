@@ -86,7 +86,16 @@ class SosRepository(private val context: Context) {
                 || sosMessage.messageText.contains("BEKOR QILINDI", ignoreCase = true)
 
         if (isStopSignal) {
+            // COMPLETELY HALT ALL ALERTS, SOUND, VIBRATION AND NOTIFICATIONS!
             dismissActiveAlert()
+            SosAlertManager.stopAllAlerts()
+            notificationManager.cancelEmergencyNotification()
+
+            if (currentList.none { it.id == sosMessage.id }) {
+                currentList.add(0, sosMessage)
+                _messages.value = currentList
+            }
+            return // DO NOT PLAY SOUND OR NOTIFICATION FOR STOP SIGNAL!
         }
 
         // 1. IF THIS MESSAGE WAS SENT FROM THIS EXACT PHYSICAL DEVICE ID, DO NOT PLAY ALARM OR NOTIFICATION!
