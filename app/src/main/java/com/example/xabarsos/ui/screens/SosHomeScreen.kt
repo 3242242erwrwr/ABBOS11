@@ -15,16 +15,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
 import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,9 +55,9 @@ import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
 import com.example.xabarsos.ui.SosViewModel
-import android.content.Context
 import com.example.xabarsos.ui.components.AddFriendDialog
 import com.example.xabarsos.ui.components.AutoStartSetupDialog
+import com.example.xabarsos.ui.components.MessagesHistoryDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
@@ -91,6 +92,7 @@ fun SosHomeScreen(
 
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAddFriendDialog by remember { mutableStateOf(false) }
+    var showMessagesMenuDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = DarkBackground,
@@ -267,63 +269,45 @@ fun SosHomeScreen(
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                // Section Title: SOS Xabarlar Tarixi
+                // DEDICATED "XABARLAR MENYUSI" BUTTON CARD
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Button(
+                        onClick = { showMessagesMenuDialog = true },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00B0FF),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
                     ) {
-                        Text(
-                            text = "📋 SOS XABARLAR TARIXI",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp)
                         )
-
-                        if (messages.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.clearHistory() }) {
-                                Icon(
-                                    imageVector = Icons.Default.DeleteSweep,
-                                    contentDescription = "Tarixni tozalash",
-                                    tint = EmergencyRed
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                if (messages.isEmpty()) {
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = DarkCardContainer
-                            )
-                        ) {
-                            Text(
-                                text = "Hozircha SOS xabarlar yo'q. Qizil tugmalardan birini bossangiz barcha qurilmalarga SOS boradi!",
-                                modifier = Modifier.padding(16.dp),
-                                fontSize = 14.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-                } else {
-                    items(messages, key = { it.id }) { message ->
-                        SosMessageCard(message = message)
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (messages.isEmpty()) "📋 XABARLAR MENYUSI" else "📋 XABARLAR MENYUSI (${messages.size} TA XABAR)",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
         }
+    }
+
+    if (showMessagesMenuDialog) {
+        MessagesHistoryDialog(
+            messages = messages,
+            onClearHistory = { viewModel.clearHistory() },
+            onDismiss = { showMessagesMenuDialog = false }
+        )
     }
 
     if (showSettingsDialog) {
