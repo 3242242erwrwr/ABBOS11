@@ -114,7 +114,9 @@ class VoiceCallManager(private val context: Context) {
     private val _callDurationSeconds = MutableStateFlow(0)
     val callDurationSeconds: StateFlow<Int> = _callDurationSeconds.asStateFlow()
 
+    @Volatile
     private var audioRecord: AudioRecord? = null
+    @Volatile
     private var audioTrack: AudioTrack? = null
     private val isRecording = AtomicBoolean(false)
     private val isPlaying = AtomicBoolean(false)
@@ -124,11 +126,9 @@ class VoiceCallManager(private val context: Context) {
     private var sendAudioChunkListener: ((String) -> Unit)? = null
 
     companion object {
-        private const val SAMPLE_RATE = 16000 // 16kHz HD voice
         private const val CHANNEL_IN = AudioFormat.CHANNEL_IN_MONO
         private const val CHANNEL_OUT = AudioFormat.CHANNEL_OUT_MONO
         private const val ENCODING = AudioFormat.ENCODING_PCM_16BIT
-        private const val FRAME_SIZE_SHORTS = 640 // 40ms audio frame at 16kHz
     }
 
     fun setSendAudioChunkListener(listener: (String) -> Unit) {
@@ -227,8 +227,10 @@ class VoiceCallManager(private val context: Context) {
     private fun playRingtone() {
         try {
             val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-            incomingRingtone = RingtoneManager.getRingtone(context, ringtoneUri)
-            incomingRingtone?.play()
+            if (ringtoneUri != null) {
+                incomingRingtone = RingtoneManager.getRingtone(context, ringtoneUri)
+                incomingRingtone?.play()
+            }
         } catch (t: Throwable) {
             Log.e("VoiceCallManager", "Error playing ringtone: ${t.message}")
         }
@@ -261,29 +263,39 @@ class VoiceCallManager(private val context: Context) {
     @Synchronized
     private fun startAudioStream() {
         try {
-            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-            audioManager.isSpeakerphoneOn = _isSpeakerOn.value
+            try {
+                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+                audioManager.isSpeakerphoneOn = _isSpeakerOn.value
+            } catch (t: Throwable) {}
 
-            // 1. Create Low-Latency AudioRecord with fallback
+            // Determine Hardware Supported Sample Rate (16000Hz or 8000Hz)
+            var sampleRate = 16000
+            var minRecSize = AudioRecord.getMinBufferSize(sampleRate, CHANNEL_IN, ENCODING)
+            if (minRecSize <= 0) {
+                sampleRate = 8000
+                minRecSize = AudioRecord.getMinBufferSize(sampleRate, CHANNEL_IN, ENCODING)
+            }
+            val frameSizeShorts = if (sampleRate == 16000) 640 else 320
+
+            // 1. Create AudioRecord
             if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                val minRecSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_IN, ENCODING)
                 if (minRecSize > 0) {
                     try {
                         audioRecord = AudioRecord(
                             MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                            SAMPLE_RATE,
+                            sampleRate,
                             CHANNEL_IN,
                             ENCODING,
-                            maxOf(minRecSize * 2, FRAME_SIZE_SHORTS * 4)
+                            maxOf(minRecSize * 2, frameSizeShorts * 4)
                         )
                     } catch (t: Throwable) {
                         try {
                             audioRecord = AudioRecord(
                                 MediaRecorder.AudioSource.MIC,
-                                SAMPLE_RATE,
+                                sampleRate,
                                 CHANNEL_IN,
                                 ENCODING,
-                                maxOf(minRecSize * 2, FRAME_SIZE_SHORTS * 4)
+                                maxOf(minRecSize * 2, frameSizeShorts * 4)
                             )
                         } catch (t2: Throwable) {
                             Log.e("VoiceCallManager", "Error creating AudioRecord MIC fallback: ${t2.message}")
@@ -301,8 +313,12 @@ class VoiceCallManager(private val context: Context) {
                 }
             }
 
-            // 2. Create Low-Latency AudioTrack
-            val minTrackSize = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_OUT, ENCODING)
+            // 2. Create AudioTrack
+            var minTrackSize = AudioTrack.getMinBufferSize(sampleRate, CHANNEL_OUT, ENCODING)
+            if (minTrackSize <= 0) {
+                minTrackSize = AudioTrack.getMinBufferSize(8000, CHANNEL_OUT, ENCODING)
+            }
+
             if (minTrackSize > 0) {
                 try {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -316,11 +332,11 @@ class VoiceCallManager(private val context: Context) {
                             .setAudioFormat(
                                 AudioFormat.Builder()
                                     .setEncoding(ENCODING)
-                                    .setSampleRate(SAMPLE_RATE)
+                                    .setSampleRate(sampleRate)
                                     .setChannelMask(CHANNEL_OUT)
                                     .build()
                             )
-                            .setBufferSizeInBytes(maxOf(minTrackSize * 2, FRAME_SIZE_SHORTS * 4))
+                            .setBufferSizeInBytes(maxOf(minTrackSize * 2, frameSizeShorts * 4))
                             .setPerformanceMode(AudioTrack.PERFORMANCE_MODE_LOW_LATENCY)
                             .setTransferMode(AudioTrack.MODE_STREAM)
                             .build()
@@ -328,15 +344,27 @@ class VoiceCallManager(private val context: Context) {
                         @Suppress("DEPRECATION")
                         audioTrack = AudioTrack(
                             AudioManager.STREAM_VOICE_CALL,
-                            SAMPLE_RATE,
+                            sampleRate,
                             CHANNEL_OUT,
                             ENCODING,
-                            maxOf(minTrackSize * 2, FRAME_SIZE_SHORTS * 4),
+                            maxOf(minTrackSize * 2, frameSizeShorts * 4),
                             AudioTrack.MODE_STREAM
                         )
                     }
                 } catch (t: Throwable) {
-                    Log.e("VoiceCallManager", "Error creating AudioTrack: ${t.message}")
+                    try {
+                        @Suppress("DEPRECATION")
+                        audioTrack = AudioTrack(
+                            AudioManager.STREAM_VOICE_CALL,
+                            8000,
+                            CHANNEL_OUT,
+                            ENCODING,
+                            maxOf(8000, frameSizeShorts * 4),
+                            AudioTrack.MODE_STREAM
+                        )
+                    } catch (t2: Throwable) {
+                        Log.e("VoiceCallManager", "Error creating AudioTrack fallback: ${t2.message}")
+                    }
                 }
             }
 
@@ -349,17 +377,19 @@ class VoiceCallManager(private val context: Context) {
                 }
             }
 
-            // 3. Audio Recording Thread (G.711 Compressed Stream)
+            // 3. Audio Recording Thread
             scope.launch(Dispatchers.IO) {
-                val shortBuffer = ShortArray(FRAME_SIZE_SHORTS)
+                val shortBuffer = ShortArray(frameSizeShorts)
                 while (isRecording.get() && _callState.value == CallState.CONNECTED) {
                     try {
-                        val readShorts = audioRecord?.read(shortBuffer, 0, FRAME_SIZE_SHORTS) ?: 0
-                        if (readShorts > 0 && !_isMuted.value) {
-                            // Compress 16-bit PCM to 8-bit G.711 u-law (50% size reduction, 0ms delay)
-                            val g711Bytes = G711Codec.encodeULaw(shortBuffer, readShorts)
-                            val base64Chunk = Base64.encodeToString(g711Bytes, Base64.NO_WRAP)
-                            sendAudioChunkListener?.invoke(base64Chunk)
+                        val currentRec = audioRecord
+                        if (currentRec != null && currentRec.state == AudioRecord.STATE_INITIALIZED) {
+                            val readShorts = currentRec.read(shortBuffer, 0, frameSizeShorts)
+                            if (readShorts > 0 && !_isMuted.value) {
+                                val g711Bytes = G711Codec.encodeULaw(shortBuffer, readShorts)
+                                val base64Chunk = Base64.encodeToString(g711Bytes, Base64.NO_WRAP)
+                                sendAudioChunkListener?.invoke(base64Chunk)
+                            }
                         }
                     } catch (t: Throwable) {
                         Log.e("VoiceCallManager", "Error reading AudioRecord: ${t.message}")
@@ -372,12 +402,14 @@ class VoiceCallManager(private val context: Context) {
     }
 
     fun onAudioChunkReceived(base64Data: String) {
-        if (_callState.value == CallState.CONNECTED && isPlaying.get() && audioTrack?.state == AudioTrack.STATE_INITIALIZED) {
+        if (_callState.value == CallState.CONNECTED && isPlaying.get()) {
             try {
-                val g711Bytes = Base64.decode(base64Data, Base64.NO_WRAP)
-                // Decode 8-bit G.711 u-law to 16-bit PCM
-                val pcmShorts = G711Codec.decodeULaw(g711Bytes, g711Bytes.size)
-                audioTrack?.write(pcmShorts, 0, pcmShorts.size)
+                val currentTrack = audioTrack
+                if (currentTrack != null && currentTrack.state == AudioTrack.STATE_INITIALIZED && base64Data.isNotBlank()) {
+                    val g711Bytes = Base64.decode(base64Data, Base64.NO_WRAP)
+                    val pcmShorts = G711Codec.decodeULaw(g711Bytes, g711Bytes.size)
+                    currentTrack.write(pcmShorts, 0, pcmShorts.size)
+                }
             } catch (t: Throwable) {
                 Log.e("VoiceCallManager", "Error playing audio chunk: ${t.message}")
             }
