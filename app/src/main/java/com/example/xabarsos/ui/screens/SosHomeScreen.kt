@@ -123,9 +123,9 @@ fun SosHomeScreen(
                     Box(
                         modifier = Modifier
                             .padding(end = 4.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .background(statusColor.copy(alpha = 0.2f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 6.dp, vertical = 3.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -133,26 +133,26 @@ fun SosHomeScreen(
                                 imageVector = if (connectionStatus is ConnectionStatus.Connected) Icons.Default.Wifi else Icons.Default.WifiOff,
                                 contentDescription = null,
                                 tint = statusColor,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(13.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
                                 text = if (connectionStatus is ConnectionStatus.Connected) "Internet" else "Oflayn",
                                 color = statusColor,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
 
-                    // Add Friend Badge in TopBar
+                    // Add Friend Badge in TopBar (Compact Size)
                     Box(
                         modifier = Modifier
-                            .padding(end = 6.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .padding(end = 4.dp)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(Color(0xFFFF9100).copy(alpha = 0.2f))
                             .clickable { showAddFriendDialog = true }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 6.dp, vertical = 3.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -160,13 +160,13 @@ fun SosHomeScreen(
                                 imageVector = Icons.Default.PersonAdd,
                                 contentDescription = "Do'st qo'shish",
                                 tint = Color(0xFFFF9100),
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(13.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
                                 text = "+ Do'st",
                                 color = Color(0xFFFF9100),
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
