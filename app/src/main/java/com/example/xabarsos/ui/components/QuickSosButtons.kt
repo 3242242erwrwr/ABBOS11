@@ -1,5 +1,11 @@
 package com.example.xabarsos.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,6 +61,8 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 fun QuickSosButtons(
     friendsList: List<String>,
     selectedRecipient: String = "",
+    typingSenderName: String? = null,
+    typingStatusType: String? = null,
     onSelectRecipient: (String) -> Unit = {},
     isRecordingVoiceNote: Boolean = false,
     recordingDurationSeconds: Int = 0,
@@ -70,6 +78,17 @@ fun QuickSosButtons(
     onStopAllAlerts: () -> Unit = {}
 ) {
     var customMessage by remember { mutableStateOf("") }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "friendFlashing")
+    val friendFlashingAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 320, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "friendFlashingAlpha"
+    )
 
     Card(
         modifier = Modifier
@@ -155,6 +174,18 @@ fun QuickSosButtons(
                         ) {
                             items(friendsList) { friendName ->
                                 val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
+                                val isThisFriendTyping = typingSenderName != null && (typingSenderName.equals(friendName, ignoreCase = true) || typingSenderName.contains(friendName, ignoreCase = true))
+
+                                val cardBgColor = when {
+                                    isThisFriendTyping -> Color(0xFFFF1744).copy(alpha = friendFlashingAlpha)
+                                    isSelected -> Color(0xFF00B0FF)
+                                    else -> Color(0xFF1E2230)
+                                }
+
+                                val cardBorder = if (isThisFriendTyping) {
+                                    BorderStroke(2.dp, Color(0xFFFF1744).copy(alpha = friendFlashingAlpha))
+                                } else null
+
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -166,17 +197,24 @@ fun QuickSosButtons(
                                             }
                                         },
                                     colors = CardDefaults.cardColors(
-                                        containerColor = if (isSelected) Color(0xFF00B0FF) else Color(0xFF1E2230)
+                                        containerColor = cardBgColor
                                     ),
+                                    border = cardBorder,
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        val displayLabel = when {
+                                            isThisFriendTyping && typingStatusType == "typing_voice" -> "🎙️ $friendName (Galasavoy...)"
+                                            isThisFriendTyping -> "✏️ $friendName (Yozmoqda...)"
+                                            else -> "👤 $friendName"
+                                        }
+
                                         Text(
-                                            text = "👤 $friendName",
-                                            fontWeight = FontWeight.Bold,
+                                            text = displayLabel,
+                                            fontWeight = if (isThisFriendTyping) FontWeight.Black else FontWeight.Bold,
                                             fontSize = 11.sp,
                                             color = Color.White,
                                             maxLines = 1

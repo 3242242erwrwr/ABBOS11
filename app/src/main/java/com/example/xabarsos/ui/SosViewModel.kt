@@ -29,6 +29,8 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val recordingDurationSeconds: StateFlow<Int> = repository.voiceNoteManager.recordingDurationSeconds
     val selectedVoiceEffect: StateFlow<VoiceEffect> = repository.voiceNoteManager.selectedVoiceEffect
     val peerTypingStatus: StateFlow<String?> = repository.peerTypingStatus
+    val typingSenderName: StateFlow<String?> = repository.typingSenderName
+    val typingStatusType: StateFlow<String?> = repository.typingStatusType
 
     val availableAppUpdate: StateFlow<AppVersionInfo?> = repository.availableAppUpdate
     val isDownloadingUpdate: StateFlow<Boolean> = repository.appUpdateManager.isDownloading

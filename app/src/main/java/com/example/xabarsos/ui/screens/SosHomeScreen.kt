@@ -106,6 +106,8 @@ fun SosHomeScreen(
     val recordingDurationSeconds by viewModel.recordingDurationSeconds.collectAsState()
     val selectedVoiceEffect by viewModel.selectedVoiceEffect.collectAsState()
     val peerTypingStatus by viewModel.peerTypingStatus.collectAsState()
+    val typingSenderName by viewModel.typingSenderName.collectAsState()
+    val typingStatusType by viewModel.typingStatusType.collectAsState()
 
     val infiniteTransition = rememberInfiniteTransition(label = "flashingRed")
     val flashingRedAlpha by infiniteTransition.animateFloat(
@@ -312,6 +314,8 @@ fun SosHomeScreen(
                         QuickSosButtons(
                             friendsList = friendsList,
                             selectedRecipient = selectedRecipient,
+                            typingSenderName = typingSenderName,
+                            typingStatusType = typingStatusType,
                             onSelectRecipient = { selectedRecipient = it },
                             isRecordingVoiceNote = isRecordingVoiceNote,
                             recordingDurationSeconds = recordingDurationSeconds,

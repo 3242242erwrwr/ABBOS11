@@ -66,6 +66,12 @@ class SosRepository(private val context: Context) {
     private val _peerTypingStatus = MutableStateFlow<String?>(null)
     val peerTypingStatus: StateFlow<String?> = _peerTypingStatus.asStateFlow()
 
+    private val _typingSenderName = MutableStateFlow<String?>(null)
+    val typingSenderName: StateFlow<String?> = _typingSenderName.asStateFlow()
+
+    private val _typingStatusType = MutableStateFlow<String?>(null)
+    val typingStatusType: StateFlow<String?> = _typingStatusType.asStateFlow()
+
     private val processedMessageIds = HashSet<String>()
     private var typingJob: kotlinx.coroutines.Job? = null
     @Volatile
@@ -102,20 +108,30 @@ class SosRepository(private val context: Context) {
                                 typingJob?.cancel()
                                 when (status) {
                                     "typing_text" -> {
+                                        _typingSenderName.value = sender
+                                        _typingStatusType.value = "typing_text"
                                         _peerTypingStatus.value = "✏️ $sender SIZGA MATNLI XABAR YOZMOQDA..."
                                         typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                                             kotlinx.coroutines.delay(6000)
+                                            _typingSenderName.value = null
+                                            _typingStatusType.value = null
                                             _peerTypingStatus.value = null
                                         }
                                     }
                                     "typing_voice" -> {
+                                        _typingSenderName.value = sender
+                                        _typingStatusType.value = "typing_voice"
                                         _peerTypingStatus.value = "🎙️ $sender SIZGA GALASAVOY YOZMOQDA..."
                                         typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                                             kotlinx.coroutines.delay(7000)
+                                            _typingSenderName.value = null
+                                            _typingStatusType.value = null
                                             _peerTypingStatus.value = null
                                         }
                                     }
                                     else -> {
+                                        _typingSenderName.value = null
+                                        _typingStatusType.value = null
                                         _peerTypingStatus.value = null
                                     }
                                 }
