@@ -18,6 +18,7 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val userName: StateFlow<String> = repository.userName
     val serverUrl: StateFlow<String> = repository.serverUrl
     val soundType: StateFlow<SosSoundType> = repository.soundType
+    val broadcastToAllEnabled: StateFlow<Boolean> = repository.broadcastToAllEnabled
     val friendsList: StateFlow<List<String>> = repository.friendsList
     val connectionStatus: StateFlow<ConnectionStatus> = repository.webSocketManager.connectionStatus
     val isScanningBluetooth: StateFlow<Boolean> = repository.bluetoothManager.isScanning
@@ -80,6 +81,10 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateSoundType(type: SosSoundType) {
         repository.saveSoundType(type)
+    }
+
+    fun updateBroadcastToAllEnabled(enabled: Boolean) {
+        repository.saveBroadcastToAllEnabled(enabled)
     }
 
     fun testSound(type: SosSoundType) {

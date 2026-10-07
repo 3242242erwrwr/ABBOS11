@@ -1,6 +1,8 @@
 package com.example.xabarsos.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +26,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,7 +53,8 @@ fun SettingsDialog(
     currentName: String,
     currentServerUrl: String,
     currentSoundType: SosSoundType,
-    onSave: (String, String, SosSoundType) -> Unit,
+    currentBroadcastToAll: Boolean = true,
+    onSave: (String, String, SosSoundType, Boolean) -> Unit,
     onTestSound: (SosSoundType) -> Unit,
     onStopTestSound: () -> Unit,
     onDismiss: () -> Unit
@@ -58,6 +63,7 @@ fun SettingsDialog(
     var name by remember { mutableStateOf(currentName) }
     var serverUrl by remember { mutableStateOf(currentServerUrl) }
     var selectedSoundType by remember { mutableStateOf(currentSoundType) }
+    var isBroadcastToAll by remember { mutableStateOf(currentBroadcastToAll) }
     var isTestingSound by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
@@ -220,6 +226,45 @@ fun SettingsDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // BARCHAGA BROADCAST SWITCH
+                Text(
+                    text = "📢 BARCHAGA REJIMI (HAMMAGA SOS YUBORISH):",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF121218), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (isBroadcastToAll) "📢 Yoqilgan (Barcha qurilmalarga boradi)" else "👤 O'chirilgan (Faqat tanlangan do'stga boradi)",
+                            fontSize = 12.sp,
+                            color = if (isBroadcastToAll) EmergencyRed else Color(0xFF00B0FF),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Switch(
+                        checked = isBroadcastToAll,
+                        onCheckedChange = { isBroadcastToAll = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = EmergencyRed,
+                            uncheckedThumbColor = Color.Gray,
+                            uncheckedTrackColor = Color(0xFF22222E)
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // Server URL Section
                 Text(
                     text = "🌐 Render Web Service Server Manzili:",
@@ -250,7 +295,7 @@ fun SettingsDialog(
             Button(
                 onClick = {
                     onStopTestSound()
-                    onSave(name, serverUrl, selectedSoundType)
+                    onSave(name, serverUrl, selectedSoundType, isBroadcastToAll)
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(

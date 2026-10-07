@@ -52,6 +52,7 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 fun QuickSosButtons(
     friendsList: List<String>,
     selectedRecipient: String = "BARCHAGA",
+    isBroadcastToAllEnabled: Boolean = true,
     onSelectRecipient: (String) -> Unit = {},
     isRecordingVoiceNote: Boolean = false,
     recordingDurationSeconds: Int = 0,
@@ -99,49 +100,57 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // DYNAMIC FRIENDS CHIPS & DO'STLARIM BUTTON
+            // DYNAMIC FRIENDS CHIPS ON HOME SCREEN
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Preset Option 1: BARCHAGA (Default)
-                FilterChip(
-                    selected = (selectedRecipient == "BARCHAGA"),
-                    onClick = {
-                        onSelectRecipient("BARCHAGA")
-                    },
-                    label = { Text("📢 Barchaga", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = EmergencyRed,
-                        selectedLabelColor = Color.White,
-                        containerColor = Color(0xFF22222E).copy(alpha = 0.8f),
-                        labelColor = Color.LightGray
-                    )
-                )
-
-                // Option 2: DO'STLARIM SPISOK BUTTON
+                // Add Friend Chip Button
                 FilterChip(
                     selected = false,
                     onClick = onOpenAddFriendDialog,
-                    label = { Text("🤝 Do'stlarim (${friendsList.size}) ›", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                    label = { Text("➕ Qo'shish", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                     colors = FilterChipDefaults.filterChipColors(
                         containerColor = Color(0xFF00B0FF).copy(alpha = 0.25f),
                         labelColor = Color(0xFF00B0FF)
                     )
                 )
 
-                // Option 3: SELECTED SPECIFIC FRIEND BADGE WITH CANCEL TAP
-                if (selectedRecipient != "BARCHAGA") {
+                if (isBroadcastToAllEnabled) {
                     FilterChip(
-                        selected = true,
+                        selected = (selectedRecipient == "BARCHAGA"),
                         onClick = {
                             onSelectRecipient("BARCHAGA")
                         },
-                        label = { Text("🎯 $selectedRecipient ✕", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                        label = { Text("📢 Barchaga", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = EmergencyRed,
+                            selectedLabelColor = Color.White,
+                            containerColor = Color(0xFF22222E).copy(alpha = 0.8f),
+                            labelColor = Color.LightGray
+                        )
+                    )
+                }
+
+                // Added Friends Chips directly on Home Screen for 1-Tap Selection!
+                friendsList.forEach { friendName ->
+                    val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            if (isSelected) {
+                                onSelectRecipient("BARCHAGA")
+                            } else {
+                                onSelectRecipient(friendName)
+                            }
+                        },
+                        label = { Text("👤 $friendName", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF00B0FF),
-                            selectedLabelColor = Color.White
+                            selectedLabelColor = Color.White,
+                            containerColor = Color(0xFF22222E).copy(alpha = 0.8f),
+                            labelColor = Color.LightGray
                         )
                     )
                 }

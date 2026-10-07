@@ -55,6 +55,9 @@ class SosRepository(private val context: Context) {
     private val _friendsList = MutableStateFlow(getFriendsList())
     val friendsList: StateFlow<List<String>> = _friendsList.asStateFlow()
 
+    private val _broadcastToAllEnabled = MutableStateFlow(getBroadcastToAllEnabled())
+    val broadcastToAllEnabled: StateFlow<Boolean> = _broadcastToAllEnabled.asStateFlow()
+
     private val _peerTypingStatus = MutableStateFlow<String?>(null)
     val peerTypingStatus: StateFlow<String?> = _peerTypingStatus.asStateFlow()
 
@@ -334,6 +337,15 @@ class SosRepository(private val context: Context) {
         } catch (e: Exception) {
             SosSoundType.ALARM
         }
+    }
+
+    fun getBroadcastToAllEnabled(): Boolean {
+        return prefs.getBoolean("broadcast_to_all", true)
+    }
+
+    fun saveBroadcastToAllEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("broadcast_to_all", enabled).apply()
+        _broadcastToAllEnabled.value = enabled
     }
 
     fun getFriendsList(): List<String> {

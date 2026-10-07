@@ -90,6 +90,7 @@ fun SosHomeScreen(
     val userName by viewModel.userName.collectAsState()
     val serverUrl by viewModel.serverUrl.collectAsState()
     val soundType by viewModel.soundType.collectAsState()
+    val broadcastToAllEnabled by viewModel.broadcastToAllEnabled.collectAsState()
     val friendsList by viewModel.friendsList.collectAsState()
     val connectionStatus by viewModel.connectionStatus.collectAsState()
 
@@ -294,6 +295,7 @@ fun SosHomeScreen(
                         QuickSosButtons(
                             friendsList = friendsList,
                             selectedRecipient = selectedRecipient,
+                            isBroadcastToAllEnabled = broadcastToAllEnabled,
                             onSelectRecipient = { selectedRecipient = it },
                             isRecordingVoiceNote = isRecordingVoiceNote,
                             recordingDurationSeconds = recordingDurationSeconds,
@@ -393,10 +395,12 @@ fun SosHomeScreen(
             currentName = userName,
             currentServerUrl = serverUrl,
             currentSoundType = soundType,
-            onSave = { newName, newUrl, newSoundType ->
+            currentBroadcastToAll = broadcastToAllEnabled,
+            onSave = { newName, newUrl, newSoundType, newBroadcastToAll ->
                 viewModel.updateUserName(newName)
                 viewModel.updateServerUrl(newUrl)
                 viewModel.updateSoundType(newSoundType)
+                viewModel.updateBroadcastToAllEnabled(newBroadcastToAll)
             },
             onTestSound = { soundToTest ->
                 viewModel.testSound(soundToTest)
