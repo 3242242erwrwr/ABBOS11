@@ -312,15 +312,16 @@ class SosRepository(private val context: Context) {
     }
 
     fun sendTypingStatus(status: String, targetRecipient: String = "BARCHAGA") {
-        webSocketManager.sendCustomJson(
-            mapOf(
-                "type" to "typing_status",
-                "status" to status,
-                "senderName" to getUserName(),
-                "senderDeviceId" to getDeviceId(),
-                "targetRecipient" to targetRecipient
-            )
+        val payload = mapOf(
+            "id" to UUID.randomUUID().toString(),
+            "type" to "typing_status",
+            "status" to status,
+            "senderName" to getUserName(),
+            "senderDeviceId" to getDeviceId(),
+            "targetRecipient" to targetRecipient,
+            "messageText" to "TYPING_STATUS_$status"
         )
+        webSocketManager.sendCustomJson(payload)
     }
 
     fun saveUserName(name: String) {
