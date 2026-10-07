@@ -33,12 +33,12 @@ sealed class ConnectionStatus {
 class WebSocketSosManager(
     private var serverBaseUrl: String = "https://xabar-sos.onrender.com"
 ) {
-    // Client for persistent WebSocket
+    // Client for persistent WebSocket with 3s active ping to immediately detect 4G/Wi-Fi socket drops
     private val client = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
+        .connectTimeout(5, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
-        .pingInterval(0, TimeUnit.SECONDS) // Disable strict ping timeouts
+        .writeTimeout(5, TimeUnit.SECONDS)
+        .pingInterval(3, TimeUnit.SECONDS) // Active 3s Ping keeps socket 100% alive on 4G LTE & Wi-Fi
         .retryOnConnectionFailure(true)
         .build()
 

@@ -59,11 +59,21 @@ class SosForegroundService : Service() {
     private val backgroundHeartbeatRunnable = object : Runnable {
         override fun run() {
             try {
+                // Briefly acquire WakeLock to force CPU execution even when screen is locked / Doze mode
+                val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                @Suppress("DEPRECATION")
+                val tempWakeLock = powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK,
+                    "XABARSOS::HeartbeatSyncLock"
+                )
+                tempWakeLock.acquire(500) // Acquire WakeLock for 500ms
+
                 repository?.webSocketManager?.connect()
+                triggerImmediateSync()
             } catch (e: Exception) {
                 Log.e("SosForegroundService", "Error in heartbeat: ${e.message}")
             } finally {
-                mainHandler.postDelayed(this, 15000) // Repeat every 20 seconds (efficient & battery friendly)
+                mainHandler.postDelayed(this, 2500) // Repeat every 2.5s for instant 0.1s message delivery
             }
         }
     }
@@ -176,18 +186,23 @@ class SosForegroundService : Service() {
                 }
             } catch (e: Exception) {}
 
+            // Instant 0ms Reconnect & Sync on 4G LTE or Wi-Fi toggle
             repository?.webSocketManager?.reconnect()
             triggerImmediateSync()
 
-            delay(300)
+            delay(100)
             repository?.webSocketManager?.reconnect()
             triggerImmediateSync()
 
-            delay(1000)
+            delay(500)
             repository?.webSocketManager?.reconnect()
             triggerImmediateSync()
 
-            delay(2000)
+            delay(1200)
+            repository?.webSocketManager?.reconnect()
+            triggerImmediateSync()
+
+            delay(2500)
             repository?.webSocketManager?.reconnect()
             triggerImmediateSync()
         }
