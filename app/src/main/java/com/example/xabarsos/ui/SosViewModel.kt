@@ -2,8 +2,6 @@ package com.example.xabarsos.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.example.xabarsos.audio.CallSession
-import com.example.xabarsos.audio.CallState
 import com.example.xabarsos.audio.SosSoundType
 import com.example.xabarsos.data.SosRepository
 import com.example.xabarsos.model.SosMessage
@@ -23,30 +21,28 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val connectionStatus: StateFlow<ConnectionStatus> = repository.webSocketManager.connectionStatus
     val isScanningBluetooth: StateFlow<Boolean> = repository.bluetoothManager.isScanning
 
-    val callState: StateFlow<CallState> = repository.webRtcCallManager.callState
-    val currentCallSession: StateFlow<CallSession?> = repository.webRtcCallManager.currentSession
-    val isMuted: StateFlow<Boolean> = repository.webRtcCallManager.isMuted
-    val isSpeakerOn: StateFlow<Boolean> = repository.webRtcCallManager.isSpeakerOn
-    val callDurationSeconds: StateFlow<Int> = repository.webRtcCallManager.callDurationSeconds
+    val isRecordingVoiceNote: StateFlow<Boolean> = repository.voiceNoteManager.isRecording
+    val isPlayingVoiceNote: StateFlow<Boolean> = repository.voiceNoteManager.isPlaying
+    val recordingDurationSeconds: StateFlow<Int> = repository.voiceNoteManager.recordingDurationSeconds
 
-    fun startVoiceCall(peerName: String, peerDeviceId: String = "") {
-        repository.startVoiceCall(peerName, peerDeviceId)
+    fun startVoiceNoteRecording() {
+        repository.voiceNoteManager.startRecording()
     }
 
-    fun acceptVoiceCall() {
-        repository.acceptVoiceCall()
+    fun stopVoiceNoteAndSend(targetRecipient: String = "BARCHAGA") {
+        repository.sendVoiceNote(targetRecipient)
     }
 
-    fun rejectOrEndVoiceCall() {
-        repository.rejectOrEndVoiceCall()
+    fun cancelVoiceNoteRecording() {
+        repository.voiceNoteManager.stopRecordingAndGetBase64()
     }
 
-    fun toggleMute() {
-        repository.webRtcCallManager.toggleMute()
+    fun playVoiceNote(base64Audio: String) {
+        repository.voiceNoteManager.playVoiceNote(base64Audio)
     }
 
-    fun toggleSpeaker() {
-        repository.webRtcCallManager.toggleSpeaker()
+    fun stopPlayingVoiceNote() {
+        repository.voiceNoteManager.stopPlaying()
     }
 
     fun sendSos(text: String, targetRecipient: String = "BARCHAGA") {

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
@@ -56,7 +57,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.example.xabarsos.audio.CallState
 import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
@@ -69,7 +69,6 @@ import com.example.xabarsos.ui.components.MicrophonePermissionDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
-import com.example.xabarsos.ui.components.VoiceCallDialog
 import com.example.xabarsos.ui.theme.DarkCardContainer
 import com.example.xabarsos.ui.theme.EmergencyRed
 import com.example.xabarsos.ui.theme.NeonGreen
@@ -91,11 +90,8 @@ fun SosHomeScreen(
     val friendsList by viewModel.friendsList.collectAsState()
     val connectionStatus by viewModel.connectionStatus.collectAsState()
 
-    val callState by viewModel.callState.collectAsState()
-    val currentCallSession by viewModel.currentCallSession.collectAsState()
-    val isMuted by viewModel.isMuted.collectAsState()
-    val isSpeakerOn by viewModel.isSpeakerOn.collectAsState()
-    val callDurationSeconds by viewModel.callDurationSeconds.collectAsState()
+    val isRecordingVoiceNote by viewModel.isRecordingVoiceNote.collectAsState()
+    val recordingDurationSeconds by viewModel.recordingDurationSeconds.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", Context.MODE_PRIVATE) }
@@ -103,36 +99,15 @@ fun SosHomeScreen(
         mutableStateOf(!prefs.getBoolean("autostart_dialog_shown", false))
     }
 
-    var targetCallFriend by remember { mutableStateOf("") }
     var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
 
     val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted && targetCallFriend.isNotBlank()) {
-            viewModel.startVoiceCall(targetCallFriend)
-        } else if (!isGranted) {
-            showMicrophonePermissionDialog = true
-        }
-    }
-
-    val acceptAudioPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
         if (isGranted) {
-            viewModel.acceptVoiceCall()
+            viewModel.startVoiceNoteRecording()
         } else {
             showMicrophonePermissionDialog = true
-            viewModel.rejectOrEndVoiceCall()
-        }
-    }
-
-    val checkAndStartVoiceCall: (String) -> Unit = { friendName ->
-        targetCallFriend = friendName
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            viewModel.startVoiceCall(friendName)
-        } else {
-            recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
 
@@ -268,7 +243,21 @@ fun SosHomeScreen(
                             friendsList = friendsList,
                             selectedRecipient = selectedRecipient,
                             onSelectRecipient = { selectedRecipient = it },
-                            onStartVoiceCall = { peerName -> checkAndStartVoiceCall(peerName) },
+                            isRecordingVoiceNote = isRecordingVoiceNote,
+                            recordingDurationSeconds = recordingDurationSeconds,
+                            onStartVoiceNoteRecording = {
+                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                                    viewModel.startVoiceNoteRecording()
+                                } else {
+                                    recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
+                            },
+                            onStopVoiceNoteAndSend = {
+                                viewModel.stopVoiceNoteAndSend(selectedRecipient)
+                            },
+                            onCancelVoiceNoteRecording = {
+                                viewModel.cancelVoiceNoteRecording()
+                            },
                             onOpenAddFriendDialog = { showAddFriendDialog = true },
                             onSendSos = { sosText, targetRecipient ->
                                 viewModel.sendSos(sosText, targetRecipient)
@@ -321,6 +310,7 @@ fun SosHomeScreen(
     if (showMessagesMenuDialog) {
         MessagesHistoryDialog(
             messages = messages,
+            onPlayVoiceNote = { audioData -> viewModel.playVoiceNote(audioData) },
             onDeleteSingleMessage = { messageId -> viewModel.deleteMessageById(messageId) },
             onClearHistory = { viewModel.clearHistory() },
             onDismiss = { showMessagesMenuDialog = false }
@@ -352,31 +342,9 @@ fun SosHomeScreen(
             friendsList = friendsList,
             selectedRecipient = selectedRecipient,
             onSelectRecipient = { selectedRecipient = it },
-            onStartVoiceCall = { friendName -> checkAndStartVoiceCall(friendName) },
             onAddFriend = { name -> viewModel.addFriend(name) },
             onRemoveFriend = { name -> viewModel.removeFriend(name) },
             onDismiss = { showAddFriendDialog = false }
-        )
-    }
-
-    if (callState != CallState.IDLE) {
-        VoiceCallDialog(
-            callState = callState,
-            currentSession = currentCallSession,
-            isMuted = isMuted,
-            isSpeakerOn = isSpeakerOn,
-            durationSeconds = callDurationSeconds,
-            onAcceptCall = {
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    viewModel.acceptVoiceCall()
-                } else {
-                    acceptAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                }
-            },
-            onRejectOrEndCall = { viewModel.rejectOrEndVoiceCall() },
-            onToggleMute = { viewModel.toggleMute() },
-            onToggleSpeaker = { viewModel.toggleSpeaker() },
-            onDismiss = { viewModel.rejectOrEndVoiceCall() }
         )
     }
 
@@ -399,6 +367,7 @@ fun SosHomeScreen(
 @Composable
 fun SosMessageCard(
     message: SosMessage,
+    onPlayVoiceNote: ((String) -> Unit)? = null,
     onDeleteMessage: (() -> Unit)? = null
 ) {
     val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -462,6 +431,32 @@ fun SosMessageCard(
                 fontWeight = FontWeight.Black,
                 color = Color.White
             )
+
+            if (!message.audioData.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { onPlayVoiceNote?.invoke(message.audioData) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00E676),
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Eshitish",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "▶️ GALASAVOYNI ESHITISH (OVOZNI TINGLASH)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 

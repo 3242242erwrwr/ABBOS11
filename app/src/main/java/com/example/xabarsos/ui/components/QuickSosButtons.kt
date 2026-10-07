@@ -28,7 +28,9 @@ import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
@@ -61,7 +63,11 @@ fun QuickSosButtons(
     friendsList: List<String>,
     selectedRecipient: String = "BARCHAGA",
     onSelectRecipient: (String) -> Unit = {},
-    onStartVoiceCall: (String) -> Unit = {},
+    isRecordingVoiceNote: Boolean = false,
+    recordingDurationSeconds: Int = 0,
+    onStartVoiceNoteRecording: () -> Unit = {},
+    onStopVoiceNoteAndSend: () -> Unit = {},
+    onCancelVoiceNoteRecording: () -> Unit = {},
     onOpenAddFriendDialog: () -> Unit = {},
     onSendSos: (text: String, recipient: String) -> Unit,
     onStopAllAlerts: () -> Unit = {}
@@ -501,7 +507,7 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Custom Message Section (PERFECT VERTICALLY CENTERED BasicTextField)
+            // Custom Message Section (PERFECT VERTICALLY CENTERED BasicTextField OR GALASAVOY RECORDING BAR)
             Text(
                 text = "Boshqa maxsus xabar yozish:",
                 fontSize = 11.sp,
@@ -511,68 +517,156 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BasicTextField(
-                    value = customMessage,
-                    onValueChange = { customMessage = it },
-                    singleLine = true,
-                    textStyle = TextStyle(
-                        fontSize = 13.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Medium
+            if (isRecordingVoiceNote) {
+                // Voice Recording Live Bar (Galasavoy)
+                val formattedRecDuration = String.format(java.util.Locale.getDefault(), "%02d:%02d", recordingDurationSeconds / 60, recordingDurationSeconds % 60)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = EmergencyRed.copy(alpha = 0.25f)
                     ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(44.dp)
-                        .background(Color(0xFF121218).copy(alpha = 0.8f), RoundedCornerShape(10.dp))
-                        .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 12.dp),
-                    decorationBox = { innerTextField ->
-                        Box(
-                            contentAlignment = Alignment.CenterStart,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            if (customMessage.isEmpty()) {
-                                Text(
-                                    text = "Xabaringizni yozing...",
-                                    color = Color.Gray,
-                                    fontSize = 13.sp
-                                )
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "🔴 $formattedRecDuration",
+                                color = EmergencyRed,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Yozilmoqda...",
+                                color = Color.White,
+                                fontSize = 11.sp
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Button(
+                                onClick = onCancelVoiceNoteRecording,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF333344),
+                                    contentColor = Color.LightGray
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text("Bekor qilish", fontSize = 11.sp)
                             }
-                            innerTextField()
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            Button(
+                                onClick = onStopVoiceNoteAndSend,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF00E676),
+                                    contentColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text("YUBORISH 📤", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                            }
                         }
                     }
-                )
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                Button(
-                    onClick = {
-                        if (customMessage.isNotBlank()) {
-                            onSendSos(customMessage, selectedRecipient)
-                            customMessage = ""
-                        }
-                    },
-                    enabled = customMessage.isNotBlank(),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = EmergencyRed,
-                        disabledContainerColor = Color(0xFF333344)
-                    ),
-                    modifier = Modifier
-                        .height(44.dp)
-                        .width(44.dp)
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Yuborish",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                    BasicTextField(
+                        value = customMessage,
+                        onValueChange = { customMessage = it },
+                        singleLine = true,
+                        textStyle = TextStyle(
+                            fontSize = 13.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .background(Color(0xFF121218).copy(alpha = 0.8f), RoundedCornerShape(10.dp))
+                            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 12.dp),
+                        decorationBox = { innerTextField ->
+                            Box(
+                                contentAlignment = Alignment.CenterStart,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                if (customMessage.isEmpty()) {
+                                    Text(
+                                        text = "Xabaringizni yozing...",
+                                        color = Color.Gray,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
                     )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    Button(
+                        onClick = {
+                            if (customMessage.isNotBlank()) {
+                                onSendSos(customMessage, selectedRecipient)
+                                customMessage = ""
+                            }
+                        },
+                        enabled = customMessage.isNotBlank(),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = EmergencyRed,
+                            disabledContainerColor = Color(0xFF333344)
+                        ),
+                        modifier = Modifier
+                            .height(44.dp)
+                            .width(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Yuborish",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    // GALASAVOY BUTTON (Ovozli Xabar)
+                    Button(
+                        onClick = onStartVoiceNoteRecording,
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00E676),
+                            contentColor = Color.Black
+                        ),
+                        modifier = Modifier
+                            .height(44.dp)
+                            .width(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = "Galasavoy (Ovozli Xabar)",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }

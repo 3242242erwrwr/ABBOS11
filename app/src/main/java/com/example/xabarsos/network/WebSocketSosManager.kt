@@ -123,6 +123,10 @@ class WebSocketSosManager(
                     // ONLY process actual SOS emergency messages
                     if (messageObj.has("messageText")) {
                         val msgText = messageObj.get("messageText")?.asString ?: ""
+                        val audioDataStr = if (messageObj.has("audioData") && !messageObj.get("audioData").isJsonNull) {
+                            messageObj.get("audioData").asString
+                        } else null
+
                         if (msgText.isNotBlank()) {
                             val sosMessage = SosMessage(
                                 id = messageObj.get("id")?.asString ?: java.util.UUID.randomUUID().toString(),
@@ -132,7 +136,8 @@ class WebSocketSosManager(
                                 targetRecipient = messageObj.get("targetRecipient")?.asString ?: "BARCHAGA",
                                 timestamp = messageObj.get("timestamp")?.asLong ?: System.currentTimeMillis(),
                                 channel = MessageChannel.INTERNET,
-                                isIncoming = true
+                                isIncoming = true,
+                                audioData = audioDataStr
                             )
                             onMessageReceivedListener?.invoke(sosMessage)
                         }
@@ -213,6 +218,10 @@ class WebSocketSosManager(
                                 continue
                             }
 
+                            val audioDataStr = if (msgObj.has("audioData") && !msgObj.get("audioData").isJsonNull) {
+                                msgObj.get("audioData").asString
+                            } else null
+
                             val sosMsg = SosMessage(
                                 id = msgObj.get("id")?.asString ?: java.util.UUID.randomUUID().toString(),
                                 deviceId = msgObj.get("deviceId")?.asString ?: "",
@@ -221,7 +230,8 @@ class WebSocketSosManager(
                                 targetRecipient = msgObj.get("targetRecipient")?.asString ?: "BARCHAGA",
                                 timestamp = msgObj.get("timestamp")?.asLong ?: System.currentTimeMillis(),
                                 channel = MessageChannel.INTERNET,
-                                isIncoming = true
+                                isIncoming = true,
+                                audioData = audioDataStr
                             )
                             parsedList.add(sosMsg)
                         }
@@ -243,16 +253,19 @@ class WebSocketSosManager(
     }
 
     fun sendSosMessage(message: SosMessage): Boolean {
-        val messageJson = gson.toJson(
-            mapOf(
-                "id" to message.id,
-                "deviceId" to message.deviceId,
-                "senderName" to message.senderName,
-                "messageText" to message.messageText,
-                "targetRecipient" to message.targetRecipient,
-                "timestamp" to message.timestamp
-            )
+        val messageMap = mutableMapOf<String, Any?>(
+            "id" to message.id,
+            "deviceId" to message.deviceId,
+            "senderName" to message.senderName,
+            "messageText" to message.messageText,
+            "targetRecipient" to message.targetRecipient,
+            "timestamp" to message.timestamp
         )
+        if (!message.audioData.isNullOrBlank()) {
+            messageMap["audioData"] = message.audioData
+        }
+
+        val messageJson = gson.toJson(messageMap)
 
         // 1. Send via WebSocket
         val wsSent = webSocket?.send(messageJson) == true
