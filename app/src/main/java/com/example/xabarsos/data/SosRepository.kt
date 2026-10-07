@@ -3,6 +3,7 @@ package com.example.xabarsos.data
 import android.content.Context
 import com.example.xabarsos.audio.SosAlertManager
 import com.example.xabarsos.audio.SosSoundType
+import com.example.xabarsos.audio.VoiceCallManager
 import com.example.xabarsos.audio.WebRtcCallManager
 import com.example.xabarsos.bluetooth.BluetoothSosManager
 import com.example.xabarsos.model.MessageChannel
@@ -34,6 +35,7 @@ class SosRepository(private val context: Context) {
     val webSocketManager = WebSocketSosManager(getServerUrl())
     val bluetoothManager = BluetoothSosManager(context)
     val webRtcCallManager = WebRtcCallManager(context)
+    val voiceCallManager = VoiceCallManager(context)
 
     private val _messages = MutableStateFlow<List<SosMessage>>(emptyList())
     val messages: StateFlow<List<SosMessage>> = _messages.asStateFlow()
@@ -60,6 +62,23 @@ class SosRepository(private val context: Context) {
     private var lastClearedTimestamp: Long = prefs.getLong("last_cleared_ts", 0L)
 
     init {
+        // Setup Dual Audio Stream Listener
+        voiceCallManager.setSendAudioChunkListener { base64Audio ->
+            val session = voiceCallManager.currentSession.value ?: webRtcCallManager.currentSession.value
+            if (session != null) {
+                webSocketManager.sendCustomJson(
+                    mapOf(
+                        "type" to "voice_audio",
+                        "callId" to session.callId,
+                        "targetRecipient" to session.peerName,
+                        "senderName" to getUserName(),
+                        "senderDeviceId" to getDeviceId(),
+                        "audioData" to base64Audio
+                    )
+                )
+            }
+        }
+
         // Setup WebRTC signaling listener
         webRtcCallManager.setSendSignalingListener { map ->
             val completeMap = map.toMutableMap()
@@ -68,7 +87,7 @@ class SosRepository(private val context: Context) {
             webSocketManager.sendCustomJson(completeMap)
         }
 
-        // Setup listener for custom signaling (WebRTC Voice Calls)
+        // Setup listener for custom signaling (WebRTC + Cloud WebSocket Audio Relay)
         webSocketManager.setOnCustomJsonReceivedListener { jsonObj ->
             try {
                 if (jsonObj.has("type") && !jsonObj.get("type").isJsonNull) {
@@ -92,13 +111,16 @@ class SosRepository(private val context: Context) {
                                 val callerDeviceId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
                                 if (callerDeviceId != getDeviceId()) {
                                     webRtcCallManager.receiveIncomingCall(callId, callerName, callerDeviceId)
+                                    voiceCallManager.receiveIncomingCall(callId, callerName, callerDeviceId)
                                 }
                             }
                             "call_answer" -> {
                                 webRtcCallManager.onCallAcceptedByPeer()
+                                voiceCallManager.onCallAcceptedByPeer()
                             }
                             "call_reject", "call_hangup" -> {
                                 webRtcCallManager.rejectOrEndCall()
+                                voiceCallManager.rejectOrEndCall()
                             }
                             "webrtc_offer" -> {
                                 val sdp = if (jsonObj.has("sdp") && !jsonObj.get("sdp").isJsonNull) jsonObj.get("sdp").asString else ""
@@ -118,6 +140,13 @@ class SosRepository(private val context: Context) {
                                 val candidate = if (jsonObj.has("candidate") && !jsonObj.get("candidate").isJsonNull) jsonObj.get("candidate").asString else ""
                                 if (candidate.isNotEmpty()) {
                                     webRtcCallManager.onIceCandidateReceived(sdpMid, sdpMLineIndex, candidate)
+                                }
+                            }
+                            "voice_audio" -> {
+                                val audioData = if (jsonObj.has("audioData") && !jsonObj.get("audioData").isJsonNull) jsonObj.get("audioData").asString else ""
+                                val callerDeviceId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
+                                if (callerDeviceId != getDeviceId() && audioData.isNotEmpty()) {
+                                    voiceCallManager.onAudioChunkReceived(audioData)
                                 }
                             }
                         }
