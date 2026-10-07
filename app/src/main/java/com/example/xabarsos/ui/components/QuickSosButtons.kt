@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -100,98 +103,170 @@ fun QuickSosButtons(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // DYNAMIC FRIENDS CHIPS ON HOME SCREEN
-            FlowRow(
+            // SIDE-BY-SIDE TELEGRAM-STYLE LAYOUT
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Add Friend Chip Button
-                FilterChip(
-                    selected = false,
-                    onClick = onOpenAddFriendDialog,
-                    label = { Text("➕ Qo'shish", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color(0xFF00B0FF).copy(alpha = 0.25f),
-                        labelColor = Color(0xFF00B0FF)
-                    )
-                )
-
-                if (isBroadcastToAllEnabled) {
-                    FilterChip(
-                        selected = (selectedRecipient == "BARCHAGA"),
-                        onClick = {
-                            onSelectRecipient("BARCHAGA")
-                        },
-                        label = { Text("📢 Barchaga", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = EmergencyRed,
-                            selectedLabelColor = Color.White,
-                            containerColor = Color(0xFF22222E).copy(alpha = 0.8f),
-                            labelColor = Color.LightGray
+                // LEFT SIDE PANEL: TELEGRAM-STYLE FRIENDS SPISOK (38% Width)
+                Card(
+                    modifier = Modifier
+                        .weight(0.38f)
+                        .height(200.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF111420)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(6.dp)
+                    ) {
+                        Text(
+                            text = "🤝 SPISOK",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            color = Color(0xFF00B0FF)
                         )
-                    )
-                }
 
-                // Added Friends Chips directly on Home Screen for 1-Tap Selection!
-                friendsList.forEach { friendName ->
-                    val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            if (isSelected) {
-                                onSelectRecipient("BARCHAGA")
-                            } else {
-                                onSelectRecipient(friendName)
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            if (isBroadcastToAllEnabled) {
+                                item {
+                                    val isSelected = selectedRecipient == "BARCHAGA"
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { onSelectRecipient("BARCHAGA") },
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (isSelected) EmergencyRed else Color(0xFF1E2230)
+                                        ),
+                                        shape = RoundedCornerShape(6.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "📢 Barchaga",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 10.sp,
+                                                color = Color.White,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                        },
-                        label = { Text("👤 $friendName", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF00B0FF),
-                            selectedLabelColor = Color.White,
-                            containerColor = Color(0xFF22222E).copy(alpha = 0.8f),
-                            labelColor = Color.LightGray
-                        )
-                    )
+
+                            items(friendsList) { friendName ->
+                                val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            if (isSelected) {
+                                                onSelectRecipient("BARCHAGA")
+                                            } else {
+                                                onSelectRecipient(friendName)
+                                            }
+                                        },
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isSelected) Color(0xFF00B0FF) else Color(0xFF1E2230)
+                                    ),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "👤 $friendName",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 10.sp,
+                                            color = Color.White,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Button(
+                            onClick = onOpenAddFriendDialog,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF00B0FF).copy(alpha = 0.25f),
+                                contentColor = Color(0xFF00B0FF)
+                            ),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(28.dp)
+                        ) {
+                            Text("➕ Qo'shish", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // VOICE EFFECT SELECTOR CHIPS (🎭 OVOZ EFFEKTI)
-            Text(
-                text = "🎭 OVOZ EFFEKTI (GALASAVOY UCHUN):",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFFD54F)
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                VoiceEffect.entries.forEach { effect ->
-                    val isSelected = selectedVoiceEffect == effect
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { onSelectVoiceEffect(effect) },
-                        label = {
-                            Text(
-                                text = "${effect.emoji} ${effect.displayName}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF00E676),
-                            selectedLabelColor = Color.Black,
-                            containerColor = Color(0xFF1E2230),
-                            labelColor = Color.LightGray
-                        )
+                // RIGHT SIDE PANEL: TARGET BADGE & VOICE EFFECTS (62% Width)
+                Column(
+                    modifier = Modifier.weight(0.62f)
+                ) {
+                    // Selected Target Indicator Badge
+                    Text(
+                        text = "🎯 Kimga: ${if (selectedRecipient == "BARCHAGA") "📢 Barchaga" else "👤 $selectedRecipient"}",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFD54F)
                     )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // VOICE EFFECT SELECTOR CHIPS (🎭 OVOZ EFFEKTI)
+                    Text(
+                        text = "🎭 OVOZ EFFEKTI:",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.LightGray
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        VoiceEffect.entries.forEach { effect ->
+                            val isSelected = selectedVoiceEffect == effect
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { onSelectVoiceEffect(effect) },
+                                label = {
+                                    Text(
+                                        text = "${effect.emoji} ${effect.displayName}",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = Color(0xFF00E676),
+                                    selectedLabelColor = Color.Black,
+                                    containerColor = Color(0xFF1E2230),
+                                    labelColor = Color.LightGray
+                                )
+                            )
+                        }
+                    }
                 }
             }
 
