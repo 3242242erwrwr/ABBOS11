@@ -91,6 +91,7 @@ fun SosHomeScreen(
     val connectionStatus by viewModel.connectionStatus.collectAsState()
 
     val isRecordingVoiceNote by viewModel.isRecordingVoiceNote.collectAsState()
+    val isPlayingVoiceNote by viewModel.isPlayingVoiceNote.collectAsState()
     val recordingDurationSeconds by viewModel.recordingDurationSeconds.collectAsState()
     val selectedVoiceEffect by viewModel.selectedVoiceEffect.collectAsState()
     val peerTypingStatus by viewModel.peerTypingStatus.collectAsState()
@@ -229,6 +230,7 @@ fun SosHomeScreen(
                 activeAlert?.let { alert ->
                     SosAlertBanner(
                         sosMessage = alert,
+                        isPlayingVoiceNote = isPlayingVoiceNote,
                         onPlayVoiceNote = { audioData -> viewModel.playVoiceNote(audioData) },
                         onDismiss = { viewModel.dismissActiveAlert() }
                     )

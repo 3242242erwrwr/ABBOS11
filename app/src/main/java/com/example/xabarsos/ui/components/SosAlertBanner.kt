@@ -36,6 +36,7 @@ import java.util.Locale
 @Composable
 fun SosAlertBanner(
     sosMessage: SosMessage,
+    isPlayingVoiceNote: Boolean = true,
     onPlayVoiceNote: ((String) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
@@ -75,6 +76,16 @@ fun SosAlertBanner(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
+
+            if (!sosMessage.audioData.isNullOrBlank()) {
+                // 3D TALKING EMOJI AVATAR (Lip sync with speech)
+                Talking3dEmojiAvatar(
+                    isPlaying = isPlayingVoiceNote,
+                    size = 110.dp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             Text(
                 text = sosMessage.messageText,
