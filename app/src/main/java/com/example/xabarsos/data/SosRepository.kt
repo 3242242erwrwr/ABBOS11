@@ -282,6 +282,10 @@ class SosRepository(private val context: Context) {
     fun dismissActiveAlert() {
         lastMutedTimestamp = System.currentTimeMillis()
         _activeIncomingAlert.value = null
+        _peerTypingStatus.value = null
+        _typingSenderName.value = null
+        _typingStatusType.value = null
+        typingJob?.cancel()
         SosAlertManager.stopAllAlerts()
         voiceNoteManager.stopPlaying()
         notificationManager.cancelEmergencyNotification()
