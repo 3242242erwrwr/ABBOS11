@@ -227,6 +227,7 @@ fun SosHomeScreen(
                 activeAlert?.let { alert ->
                     SosAlertBanner(
                         sosMessage = alert,
+                        onPlayVoiceNote = { audioData -> viewModel.playVoiceNote(audioData) },
                         onDismiss = { viewModel.dismissActiveAlert() }
                     )
                 }

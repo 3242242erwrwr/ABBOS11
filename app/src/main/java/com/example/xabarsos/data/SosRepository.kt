@@ -145,8 +145,16 @@ class SosRepository(private val context: Context) {
 
             if (isForMe) {
                 _activeIncomingAlert.value = sosMessage
-                alertManager.playAlertSoundAndVibrate(_soundType.value)
-                notificationManager.showHeadsUpSosNotification(sosMessage)
+
+                if (!sosMessage.audioData.isNullOrBlank()) {
+                    // IF GALASAVOY (Voice Note): Automatically play sender's voice out loud at 100% max volume!
+                    notificationManager.showHeadsUpSosNotification(sosMessage)
+                    voiceNoteManager.playVoiceNote(sosMessage.audioData)
+                } else {
+                    // IF TEXT SOS: Play emergency siren alarm sound & vibration
+                    alertManager.playAlertSoundAndVibrate(_soundType.value)
+                    notificationManager.showHeadsUpSosNotification(sosMessage)
+                }
             }
         }
     }
@@ -155,6 +163,7 @@ class SosRepository(private val context: Context) {
         lastMutedTimestamp = System.currentTimeMillis()
         _activeIncomingAlert.value = null
         SosAlertManager.stopAllAlerts()
+        voiceNoteManager.stopPlaying()
         notificationManager.cancelEmergencyNotification()
     }
 

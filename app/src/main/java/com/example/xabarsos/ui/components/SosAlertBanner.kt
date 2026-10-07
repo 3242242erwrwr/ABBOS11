@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,12 +36,13 @@ import java.util.Locale
 @Composable
 fun SosAlertBanner(
     sosMessage: SosMessage,
+    onPlayVoiceNote: ((String) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(14.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFB71C1C) // Deep emergency red dark background
         ),
@@ -50,7 +52,7 @@ fun SosAlertBanner(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -61,34 +63,60 @@ fun SosAlertBanner(
                     imageVector = Icons.Default.NotificationsActive,
                     contentDescription = "SOS Alert",
                     tint = Color.White,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "🚨 SHOSHILINCH SOS XABARI!",
                     color = Color.White,
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = sosMessage.messageText,
                 color = Color(0xFFFFD54F), // Bright neon yellow text for high contrast
-                fontSize = 28.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center,
-                lineHeight = 34.sp
+                lineHeight = 30.sp
             )
+
+            if (!sosMessage.audioData.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Button(
+                    onClick = { onPlayVoiceNote?.invoke(sosMessage.audioData) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00E676),
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Eshitish",
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "▶️ GALASAVOYNI QAYTA ESHITISH",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Yuboruvchi: ${sosMessage.senderName} | Kimga: ${sosMessage.targetRecipient}",
                 color = Color.White,
-                fontSize = 15.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium
             )
 
@@ -96,10 +124,10 @@ fun SosAlertBanner(
             Text(
                 text = "Vaqt: ${timeFormat.format(Date(sosMessage.timestamp))}",
                 color = Color.White.copy(alpha = 0.8f),
-                fontSize = 14.sp
+                fontSize = 12.sp
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = onDismiss,
@@ -107,18 +135,18 @@ fun SosAlertBanner(
                     containerColor = Color.White,
                     contentColor = Color(0xFFB71C1C)
                 ),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.VolumeOff,
                     contentDescription = "O'chirish",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "O'CHIRISH (OGOHLANTIRISHNI TO'XTATISH)",
-                    fontSize = 15.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
