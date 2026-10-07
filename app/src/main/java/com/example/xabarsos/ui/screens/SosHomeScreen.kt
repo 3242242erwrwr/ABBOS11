@@ -68,6 +68,7 @@ import com.example.xabarsos.ui.components.JamuHabarLogo
 import com.example.xabarsos.ui.components.MessagesHistoryDialog
 import com.example.xabarsos.ui.components.MicrophonePermissionDialog
 import com.example.xabarsos.ui.components.QuickSosButtons
+import com.example.xabarsos.ui.components.SelectFriendPromptDialog
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
 import com.example.xabarsos.ui.components.VideoNotePlayerDialog
@@ -135,7 +136,8 @@ fun SosHomeScreen(
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAddFriendDialog by remember { mutableStateOf(false) }
     var showMessagesMenuDialog by remember { mutableStateOf(false) }
-    var selectedRecipient by remember { mutableStateOf("BARCHAGA") }
+    var showSelectFriendPromptDialog by remember { mutableStateOf(false) }
+    var selectedRecipient by remember { mutableStateOf("") }
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
@@ -295,7 +297,6 @@ fun SosHomeScreen(
                         QuickSosButtons(
                             friendsList = friendsList,
                             selectedRecipient = selectedRecipient,
-                            isBroadcastToAllEnabled = broadcastToAllEnabled,
                             onSelectRecipient = { selectedRecipient = it },
                             isRecordingVoiceNote = isRecordingVoiceNote,
                             recordingDurationSeconds = recordingDurationSeconds,
@@ -327,6 +328,7 @@ fun SosHomeScreen(
                                 viewModel.sendTypingStatus(status, selectedRecipient)
                             },
                             onOpenAddFriendDialog = { showAddFriendDialog = true },
+                            onShowSelectFriendPrompt = { showSelectFriendPromptDialog = true },
                             onSendSos = { sosText, targetRecipient ->
                                 viewModel.sendSos(sosText, targetRecipient)
                             },
@@ -435,6 +437,12 @@ fun SosHomeScreen(
     if (showMicrophonePermissionDialog) {
         MicrophonePermissionDialog(
             onDismiss = { showMicrophonePermissionDialog = false }
+        )
+    }
+
+    if (showSelectFriendPromptDialog) {
+        SelectFriendPromptDialog(
+            onDismiss = { showSelectFriendPromptDialog = false }
         )
     }
 }

@@ -54,8 +54,7 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 @Composable
 fun QuickSosButtons(
     friendsList: List<String>,
-    selectedRecipient: String = "BARCHAGA",
-    isBroadcastToAllEnabled: Boolean = true,
+    selectedRecipient: String = "",
     onSelectRecipient: (String) -> Unit = {},
     isRecordingVoiceNote: Boolean = false,
     recordingDurationSeconds: Int = 0,
@@ -67,6 +66,7 @@ fun QuickSosButtons(
     onOpenVideoNoteRecorder: () -> Unit = {},
     onSendTypingStatus: (String) -> Unit = {},
     onOpenAddFriendDialog: () -> Unit = {},
+    onShowSelectFriendPrompt: () -> Unit = {},
     onSendSos: (text: String, recipient: String) -> Unit,
     onStopAllAlerts: () -> Unit = {}
 ) {
@@ -149,34 +149,6 @@ fun QuickSosButtons(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            if (isBroadcastToAllEnabled) {
-                                item {
-                                    val isSelected = selectedRecipient == "BARCHAGA"
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { onSelectRecipient("BARCHAGA") },
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = if (isSelected) EmergencyRed else Color(0xFF1E2230)
-                                        ),
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = "📢 Barchaga",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 11.sp,
-                                                color = Color.White,
-                                                maxLines = 1
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
                             items(friendsList) { friendName ->
                                 val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
                                 Card(
@@ -184,7 +156,7 @@ fun QuickSosButtons(
                                         .fillMaxWidth()
                                         .clickable {
                                             if (isSelected) {
-                                                onSelectRecipient("BARCHAGA")
+                                                onSelectRecipient("")
                                             } else {
                                                 onSelectRecipient(friendName)
                                             }
@@ -239,10 +211,10 @@ fun QuickSosButtons(
                     Column {
                         // Selected Target Indicator Badge
                         Text(
-                            text = "🎯 Kimga: ${if (selectedRecipient == "BARCHAGA") "📢 Barchaga" else "👤 $selectedRecipient"}",
-                            fontSize = 12.sp,
+                            text = "🎯 Kimga: ${if (selectedRecipient.isBlank()) "Tanlanmagan ⚠️" else "👤 $selectedRecipient"}",
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFFD54F)
+                            color = if (selectedRecipient.isBlank()) EmergencyRed else Color(0xFFFFD54F)
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -422,7 +394,9 @@ fun QuickSosButtons(
 
                     Button(
                         onClick = {
-                            if (customMessage.isNotBlank()) {
+                            if (selectedRecipient.isBlank()) {
+                                onShowSelectFriendPrompt()
+                            } else if (customMessage.isNotBlank()) {
                                 onSendTypingStatus("idle")
                                 onSendSos(customMessage, selectedRecipient)
                                 customMessage = ""
@@ -452,8 +426,12 @@ fun QuickSosButtons(
                     // GALASAVOY BUTTON (Ovozli Xabar)
                     Button(
                         onClick = {
-                            onSendTypingStatus("typing_voice")
-                            onStartVoiceNoteRecording()
+                            if (selectedRecipient.isBlank()) {
+                                onShowSelectFriendPrompt()
+                            } else {
+                                onSendTypingStatus("typing_voice")
+                                onStartVoiceNoteRecording()
+                            }
                         },
                         shape = RoundedCornerShape(10.dp),
                         contentPadding = PaddingValues(0.dp),
@@ -477,7 +455,13 @@ fun QuickSosButtons(
 
                     // VIDEO NOTE BUTTON (📹 Video Xabar)
                     Button(
-                        onClick = onOpenVideoNoteRecorder,
+                        onClick = {
+                            if (selectedRecipient.isBlank()) {
+                                onShowSelectFriendPrompt()
+                            } else {
+                                onOpenVideoNoteRecorder()
+                            }
+                        },
                         shape = RoundedCornerShape(10.dp),
                         contentPadding = PaddingValues(0.dp),
                         colors = ButtonDefaults.buttonColors(
