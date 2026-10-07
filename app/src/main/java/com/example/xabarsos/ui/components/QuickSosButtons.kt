@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -74,11 +75,16 @@ fun QuickSosButtons(
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+                border = BorderStroke(
+                    width = 1.2.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color.White.copy(alpha = 0.45f), Color.White.copy(alpha = 0.08f))
+                    )
+                ),
                 shape = RoundedCornerShape(20.dp)
             ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF161B28).copy(alpha = 0.75f)
+            containerColor = Color(0xFF0F1424).copy(alpha = 0.38f)
         ),
         shape = RoundedCornerShape(20.dp)
     ) {

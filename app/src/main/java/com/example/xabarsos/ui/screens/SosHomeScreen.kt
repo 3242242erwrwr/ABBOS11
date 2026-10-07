@@ -5,8 +5,16 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -98,6 +106,17 @@ fun SosHomeScreen(
     val recordingDurationSeconds by viewModel.recordingDurationSeconds.collectAsState()
     val selectedVoiceEffect by viewModel.selectedVoiceEffect.collectAsState()
     val peerTypingStatus by viewModel.peerTypingStatus.collectAsState()
+
+    val infiniteTransition = rememberInfiniteTransition(label = "flashingRed")
+    val flashingRedAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.90f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "redAlpha"
+    )
 
     val availableAppUpdate by viewModel.availableAppUpdate.collectAsState()
     val isDownloadingUpdate by viewModel.isDownloadingUpdate.collectAsState()
@@ -214,16 +233,23 @@ fun SosHomeScreen(
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFF00B0FF).copy(alpha = 0.18f), Color.Transparent),
-                        center = Offset(size.width * 0.85f, size.height * 0.25f),
-                        radius = size.width * 0.75f
+                        colors = listOf(Color(0xFF00E5FF).copy(alpha = 0.35f), Color.Transparent),
+                        center = Offset(size.width * 0.85f, size.height * 0.20f),
+                        radius = size.width * 0.85f
                     )
                 )
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color(0xFFFF3D00).copy(alpha = 0.14f), Color.Transparent),
+                        colors = listOf(Color(0xFFFF1744).copy(alpha = 0.30f), Color.Transparent),
                         center = Offset(size.width * 0.15f, size.height * 0.75f),
-                        radius = size.width * 0.85f
+                        radius = size.width * 0.90f
+                    )
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color(0xFFAA00FF).copy(alpha = 0.25f), Color.Transparent),
+                        center = Offset(size.width * 0.50f, size.height * 0.50f),
+                        radius = size.width * 0.65f
                     )
                 )
             }
@@ -244,28 +270,32 @@ fun SosHomeScreen(
                     )
                 }
 
-                // Live Peer Typing / Voice Recording Status Badge
+                // Live Peer Typing / Voice Recording Flashing Red Status Banner
                 peerTypingStatus?.let { statusText ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 4.dp),
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                            .border(
+                                BorderStroke(2.dp, Color(0xFFFF1744).copy(alpha = flashingRedAlpha)),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF00B0FF).copy(alpha = 0.22f)
+                            containerColor = Color(0xFFFF1744).copy(alpha = flashingRedAlpha * 0.35f)
                         ),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = statusText,
-                                color = Color(0xFF00B0FF),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
+                                text = "🚨 $statusText",
+                                color = Color.White,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 14.sp
                             )
                         }
                     }
