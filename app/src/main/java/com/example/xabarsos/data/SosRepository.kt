@@ -119,7 +119,7 @@ class SosRepository(private val context: Context) {
                                         _typingStatusType.value = "typing_text"
                                         _peerTypingStatus.value = "✏️ $sender SIZGA MATNLI XABAR YOZMOQDA..."
                                         typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                                            kotlinx.coroutines.delay(6000)
+                                            kotlinx.coroutines.delay(15000)
                                             _typingSenderName.value = null
                                             _typingStatusType.value = null
                                             _peerTypingStatus.value = null
@@ -130,7 +130,7 @@ class SosRepository(private val context: Context) {
                                         _typingStatusType.value = "typing_voice"
                                         _peerTypingStatus.value = "🎙️ $sender SIZGA GALASAVOY YOZMOQDA..."
                                         typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                                            kotlinx.coroutines.delay(7000)
+                                            kotlinx.coroutines.delay(15000)
                                             _typingSenderName.value = null
                                             _typingStatusType.value = null
                                             _peerTypingStatus.value = null
