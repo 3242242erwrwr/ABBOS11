@@ -85,7 +85,7 @@ class SosForegroundService : Service() {
             } catch (e: Exception) {
                 Log.e("SosForegroundService", "Error in keep-alive ping: ${e.message}")
             } finally {
-                mainHandler.postDelayed(this, 120000) // Repeat every 2 minutes to keep Render server 100% active
+                mainHandler.postDelayed(this, 60000) // Repeat every 1 minute to keep Render server 100% active & 0ms warm
             }
         }
     }

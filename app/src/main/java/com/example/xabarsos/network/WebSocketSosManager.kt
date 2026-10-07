@@ -33,20 +33,20 @@ sealed class ConnectionStatus {
 class WebSocketSosManager(
     private var serverBaseUrl: String = "https://xabar-sos.onrender.com"
 ) {
-    // Client for persistent WebSocket with 3s active ping to immediately detect 4G/Wi-Fi socket drops
+    // Client for persistent WebSocket with 1s active ping to immediately detect 4G/Wi-Fi socket drops
     private val client = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
+        .connectTimeout(4, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.SECONDS)
-        .writeTimeout(5, TimeUnit.SECONDS)
-        .pingInterval(3, TimeUnit.SECONDS) // Active 3s Ping keeps socket 100% alive on 4G LTE & Wi-Fi
+        .writeTimeout(4, TimeUnit.SECONDS)
+        .pingInterval(1, TimeUnit.SECONDS) // Active 1s Ping keeps socket 100% alive on 4G LTE & Wi-Fi
         .retryOnConnectionFailure(true)
         .build()
 
     // Client for fast HTTP REST requests & background polling
     private val fastHttpClient = OkHttpClient.Builder()
-        .connectTimeout(6, TimeUnit.SECONDS)
-        .readTimeout(6, TimeUnit.SECONDS)
-        .writeTimeout(6, TimeUnit.SECONDS)
+        .connectTimeout(3, TimeUnit.SECONDS)
+        .readTimeout(3, TimeUnit.SECONDS)
+        .writeTimeout(3, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .build()
 
