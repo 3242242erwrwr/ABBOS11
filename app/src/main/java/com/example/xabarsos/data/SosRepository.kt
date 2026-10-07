@@ -182,6 +182,12 @@ class SosRepository(private val context: Context) {
 
     @Synchronized
     fun processIncomingSosMessage(sosMessage: SosMessage) {
+        // Stop typing indicator immediately when message arrives!
+        _peerTypingStatus.value = null
+        _typingSenderName.value = null
+        _typingStatusType.value = null
+        typingJob?.cancel()
+
         // Track latest message timestamp for fast 0.01s HTTP sync
         if (sosMessage.timestamp > lastReceivedTimestamp) {
             lastReceivedTimestamp = sosMessage.timestamp
