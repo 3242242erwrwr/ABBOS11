@@ -7,6 +7,7 @@ import com.example.xabarsos.audio.VoiceEffect
 import com.example.xabarsos.data.SosRepository
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
+import com.example.xabarsos.update.AppVersionInfo
 import kotlinx.coroutines.flow.StateFlow
 
 class SosViewModel(application: Application) : AndroidViewModel(application) {
@@ -28,6 +29,20 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val recordingDurationSeconds: StateFlow<Int> = repository.voiceNoteManager.recordingDurationSeconds
     val selectedVoiceEffect: StateFlow<VoiceEffect> = repository.voiceNoteManager.selectedVoiceEffect
     val peerTypingStatus: StateFlow<String?> = repository.peerTypingStatus
+
+    val availableAppUpdate: StateFlow<AppVersionInfo?> = repository.availableAppUpdate
+    val isDownloadingUpdate: StateFlow<Boolean> = repository.appUpdateManager.isDownloading
+    val updateDownloadProgress: StateFlow<Float> = repository.appUpdateManager.downloadProgress
+
+    fun startAppUpdate(apkUrl: String) {
+        repository.appUpdateManager.downloadAndInstallApk(apkUrl) {
+            repository.availableAppUpdate.value = null
+        }
+    }
+
+    fun dismissAppUpdate() {
+        repository.availableAppUpdate.value = null
+    }
 
     fun setSelectedVoiceEffect(effect: VoiceEffect) {
         repository.voiceNoteManager.setSelectedVoiceEffect(effect)

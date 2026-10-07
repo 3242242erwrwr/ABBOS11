@@ -9,6 +9,8 @@ import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.WebSocketSosManager
 import com.example.xabarsos.notification.SosNotificationManager
+import com.example.xabarsos.update.AppUpdateManager
+import com.example.xabarsos.update.AppVersionInfo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +38,9 @@ class SosRepository(private val context: Context) {
     val webSocketManager = WebSocketSosManager(getServerUrl())
     val bluetoothManager = BluetoothSosManager(context)
     val voiceNoteManager = VoiceNoteManager(context)
+    val appUpdateManager = AppUpdateManager(context)
+
+    val availableAppUpdate = MutableStateFlow<AppVersionInfo?>(null)
 
     private val _messages = MutableStateFlow<List<SosMessage>>(emptyList())
     val messages: StateFlow<List<SosMessage>> = _messages.asStateFlow()
@@ -151,6 +156,11 @@ class SosRepository(private val context: Context) {
         // Connect WebSocket and Bluetooth Scan
         webSocketManager.connect()
         bluetoothManager.startListeningForNearbySos()
+
+        // Check for In-App Auto-Update (Play Market-Free Direct Installer)
+        appUpdateManager.checkAppUpdate(getServerUrl()) { info ->
+            availableAppUpdate.value = info
+        }
     }
 
     fun getDeviceId(): String {

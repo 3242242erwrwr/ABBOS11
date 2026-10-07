@@ -62,6 +62,7 @@ import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
 import com.example.xabarsos.ui.SosViewModel
 import com.example.xabarsos.ui.components.AddFriendDialog
+import com.example.xabarsos.ui.components.AppUpdateDialog
 import com.example.xabarsos.ui.components.AutoStartSetupDialog
 import com.example.xabarsos.ui.components.JamuHabarLogo
 import com.example.xabarsos.ui.components.MessagesHistoryDialog
@@ -97,6 +98,10 @@ fun SosHomeScreen(
     val recordingDurationSeconds by viewModel.recordingDurationSeconds.collectAsState()
     val selectedVoiceEffect by viewModel.selectedVoiceEffect.collectAsState()
     val peerTypingStatus by viewModel.peerTypingStatus.collectAsState()
+
+    val availableAppUpdate by viewModel.availableAppUpdate.collectAsState()
+    val isDownloadingUpdate by viewModel.isDownloadingUpdate.collectAsState()
+    val updateDownloadProgress by viewModel.updateDownloadProgress.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", Context.MODE_PRIVATE) }
@@ -411,6 +416,16 @@ fun SosHomeScreen(
     if (showSelectFriendPromptDialog) {
         SelectFriendPromptDialog(
             onDismiss = { showSelectFriendPromptDialog = false }
+        )
+    }
+
+    availableAppUpdate?.let { info ->
+        AppUpdateDialog(
+            versionInfo = info,
+            isDownloading = isDownloadingUpdate,
+            downloadProgress = updateDownloadProgress,
+            onStartUpdate = { viewModel.startAppUpdate(info.apkUrl) },
+            onDismiss = { viewModel.dismissAppUpdate() }
         )
     }
 }
