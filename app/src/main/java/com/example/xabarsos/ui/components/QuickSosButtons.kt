@@ -210,7 +210,7 @@ fun QuickSosButtons(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -219,16 +219,18 @@ fun QuickSosButtons(
                                 text = "🔴 $formattedRecDuration",
                                 color = EmergencyRed,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                softWrap = false
                             )
 
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
 
                             // LIVE ANIMATED VOICE AUDIO FREQUENCY WAVEFORM VISUALIZER
                             LiveAudioWaveformVisualizer(
                                 isRecording = true,
-                                width = 80.dp,
-                                height = 24.dp
+                                width = 50.dp,
+                                height = 22.dp
                             )
                         }
 
@@ -243,13 +245,13 @@ fun QuickSosButtons(
                                     contentColor = Color.LightGray
                                 ),
                                 shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                                 modifier = Modifier.height(34.dp)
                             ) {
-                                Text("Bekor qilish", fontSize = 11.sp)
+                                Text("Bekor", fontSize = 10.sp, maxLines = 1, softWrap = false)
                             }
 
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
 
                             Button(
                                 onClick = {
@@ -261,10 +263,10 @@ fun QuickSosButtons(
                                     contentColor = Color.Black
                                 ),
                                 shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                                 modifier = Modifier.height(34.dp)
                             ) {
-                                Text("YUBORISH 📤", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                Text("YUBORISH 📤", fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1, softWrap = false)
                             }
                         }
                     }
