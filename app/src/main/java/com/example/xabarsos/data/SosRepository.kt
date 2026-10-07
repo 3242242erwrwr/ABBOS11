@@ -64,6 +64,8 @@ class SosRepository(private val context: Context) {
     private val processedMessageIds = HashSet<String>()
     private var typingJob: kotlinx.coroutines.Job? = null
     @Volatile
+    var lastReceivedTimestamp: Long = System.currentTimeMillis() - 86400000L
+    @Volatile
     private var lastMutedTimestamp: Long = 0L
     @Volatile
     private var lastClearedTimestamp: Long = prefs.getLong("last_cleared_ts", 0L)
@@ -162,6 +164,11 @@ class SosRepository(private val context: Context) {
 
     @Synchronized
     fun processIncomingSosMessage(sosMessage: SosMessage) {
+        // Track latest message timestamp for fast 0.01s HTTP sync
+        if (sosMessage.timestamp > lastReceivedTimestamp) {
+            lastReceivedTimestamp = sosMessage.timestamp
+        }
+
         // Ignore messages older than last cleared timestamp
         if (sosMessage.timestamp <= lastClearedTimestamp) {
             return

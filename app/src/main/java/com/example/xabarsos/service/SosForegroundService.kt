@@ -212,7 +212,8 @@ class SosForegroundService : Service() {
         serviceScope.launch {
             try {
                 val currentRepo = repository ?: return@launch
-                currentRepo.webSocketManager.fetchRecentSosMessagesHttp(0) { newMsgs ->
+                val sinceTs = maxOf(0L, currentRepo.lastReceivedTimestamp - 5000L)
+                currentRepo.webSocketManager.fetchRecentSosMessagesHttp(sinceTs) { newMsgs ->
                     newMsgs.forEach { msg ->
                         currentRepo.processIncomingSosMessage(msg)
                     }

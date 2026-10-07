@@ -261,7 +261,25 @@ class WebSocketSosManager(
 
     fun sendCustomJson(data: Any): Boolean {
         val jsonStr = gson.toJson(data)
-        return webSocket?.send(jsonStr) == true
+        val wsSent = webSocket?.send(jsonStr) == true
+
+        if (!wsSent) {
+            // Instant 0ms HTTP REST Fallback if WebSocket is connecting or handshaking
+            scope.launch {
+                try {
+                    val httpUrl = "$serverBaseUrl/api/sos"
+                    val body = jsonStr.toRequestBody("application/json; charset=utf-8".toMediaType())
+                    val request = Request.Builder()
+                        .url(httpUrl)
+                        .post(body)
+                        .build()
+                    fastHttpClient.newCall(request).execute().close()
+                } catch (e: Exception) {
+                    Log.e("WebSocketSosManager", "Error in HTTP REST signal fallback: ${e.message}")
+                }
+            }
+        }
+        return wsSent
     }
 
     fun sendSosMessage(message: SosMessage): Boolean {
