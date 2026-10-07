@@ -19,6 +19,7 @@ class SosNotificationManager(private val context: Context) {
 
     companion object {
         const val HEADS_UP_CHANNEL_ID = "xabar_sos_telegram_popup_v6"
+        const val VOICE_NOTE_CHANNEL_ID = "xabar_sos_voice_note_popup_v1"
         const val EMERGENCY_NOTIFICATION_ID = 9999
         const val ACTION_DISMISS_ALARM = "com.example.xabarsos.ACTION_DISMISS_ALARM"
     }
@@ -28,10 +29,10 @@ class SosNotificationManager(private val context: Context) {
     }
 
     init {
-        createHighPriorityNotificationChannel()
+        createHighPriorityNotificationChannels()
     }
 
-    private fun createHighPriorityNotificationChannel() {
+    private fun createHighPriorityNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
@@ -41,27 +42,46 @@ class SosNotificationManager(private val context: Context) {
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .build()
 
-            val channel = NotificationChannel(
+            // 1. SOS Emergency Text Channel (With Alarm Sound)
+            val channelText = NotificationChannel(
                 HEADS_UP_CHANNEL_ID,
                 "🚨 Telegram Style SOS Popup Banners",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Telegram kabi ekran tepasidan ovoz bilan tushuvchi zudlikli SOS xabarnomasi"
+                description = "SOS xabarnomasi"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 800)
                 setSound(alarmUri, audioAttributes)
                 enableLights(true)
                 lightColor = Color.RED
-                setBypassDnd(true) // Bypass Do Not Disturb mode
+                setBypassDnd(true)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
 
-            notificationManager.createNotificationChannel(channel)
+            // 2. Voice Note / Galasavoy Channel (SILENT notification sound so ONLY voice note plays!)
+            val channelVoice = NotificationChannel(
+                VOICE_NOTE_CHANNEL_ID,
+                "🎙️ Voice Note Galasavoy Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Ovozli xabarnoma"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 100, 250)
+                setSound(null, null) // SILENT so no background alarm music plays!
+                enableLights(true)
+                lightColor = Color.GREEN
+                setBypassDnd(true)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            }
+
+            notificationManager.createNotificationChannel(channelText)
+            notificationManager.createNotificationChannel(channelVoice)
         }
     }
 
     fun showHeadsUpSosNotification(sosMessage: SosMessage) {
-        // PendingIntent to launch app when notification clicked
+        val isVoiceNote = !sosMessage.audioData.isNullOrBlank()
+
         val contentIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
@@ -72,7 +92,6 @@ class SosNotificationManager(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // PendingIntent for Dismiss/Mute action button
         val dismissIntent = Intent(context, SosNotificationActionReceiver::class.java).apply {
             action = ACTION_DISMISS_ALARM
         }
@@ -83,26 +102,25 @@ class SosNotificationManager(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val channelId = if (isVoiceNote) VOICE_NOTE_CHANNEL_ID else HEADS_UP_CHANNEL_ID
+        val titleText = if (isVoiceNote) "🎙️ OVOZLI XABAR: ${sosMessage.senderName}" else "🚨 SHOSHILINCH SOS: ${sosMessage.senderName}"
+        val bodyText = if (isVoiceNote) "▶️ Galasavoy ovozi yangramoqda..." else "${sosMessage.messageText} (Kimga: ${sosMessage.targetRecipient})"
 
-        val builder = NotificationCompat.Builder(context, HEADS_UP_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("🚨 SHOSHILINCH SOS: ${sosMessage.senderName}")
-            .setContentText("${sosMessage.messageText} (Kimga: ${sosMessage.targetRecipient})")
+            .setContentTitle(titleText)
+            .setContentText(bodyText)
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText("Yuboruvchi: ${sosMessage.senderName}\nXabar: ${sosMessage.messageText}\nQabul qiluvchi: ${sosMessage.targetRecipient}")
             )
-            .setPriority(NotificationCompat.PRIORITY_MAX) // Telegram style High Priority Heads-Up Pop-up
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE) // CATEGORY_MESSAGE drops down top banner exactly like Telegram
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(contentPendingIntent)
-            .setFullScreenIntent(contentPendingIntent, true) // Force Heads-Up Banner at TOP of screen!
-            .setSound(alarmUri)
-            .setVibrate(longArrayOf(0, 500, 200, 500, 200, 800))
-            .setOngoing(false) // Non-ongoing so Android System UI drops down top animated pop-up banner!
+            .setFullScreenIntent(contentPendingIntent, true)
+            .setVibrate(if (isVoiceNote) longArrayOf(0, 250, 100, 250) else longArrayOf(0, 500, 200, 500, 200, 800))
+            .setOngoing(false)
             .setAutoCancel(true)
             .addAction(
                 R.mipmap.ic_launcher,
@@ -114,6 +132,15 @@ class SosNotificationManager(private val context: Context) {
                 "📱 ILOVANI OCHISH",
                 contentPendingIntent
             )
+
+        if (!isVoiceNote) {
+            val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            builder.setSound(alarmUri)
+            builder.setDefaults(NotificationCompat.DEFAULT_ALL)
+        } else {
+            builder.setSound(null) // SILENT for voice notes so ONLY the voice is heard!
+        }
 
         val notificationId = Math.abs(sosMessage.id.hashCode())
         notificationManager.notify(notificationId, builder.build())
