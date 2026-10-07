@@ -81,57 +81,42 @@ class SosRepository(private val context: Context) {
             try {
                 if (jsonObj.has("type") && !jsonObj.get("type").isJsonNull) {
                     val type = jsonObj.get("type").asString
-                    val myName = getUserName().trim()
-                    val target = if (jsonObj.has("targetRecipient") && !jsonObj.get("targetRecipient").isJsonNull) {
-                        jsonObj.get("targetRecipient").asString.trim()
-                    } else ""
-
-                    val isForMe = target.equals("BARCHAGA", ignoreCase = true)
-                            || target.equals("ALL", ignoreCase = true)
-                            || target.isEmpty()
-                            || target.equals(myName, ignoreCase = true)
-                            || myName.contains(target, ignoreCase = true)
-                            || target.contains(myName, ignoreCase = true)
-
-                    if (isForMe) {
-                        when (type) {
-                            "delivery_ack" -> {
-                                val msgId = if (jsonObj.has("messageId") && !jsonObj.get("messageId").isJsonNull) jsonObj.get("messageId").asString else ""
-                                if (msgId.isNotEmpty()) {
-                                    val currentList = _messages.value.toMutableList()
-                                    val index = currentList.indexOfFirst { it.id == msgId }
-                                    if (index != -1) {
-                                        currentList[index] = currentList[index].copy(isDelivered = true)
-                                        _messages.value = currentList
-                                    }
+                    when (type) {
+                        "delivery_ack" -> {
+                            val msgId = if (jsonObj.has("messageId") && !jsonObj.get("messageId").isJsonNull) jsonObj.get("messageId").asString else ""
+                            if (msgId.isNotEmpty()) {
+                                val currentList = _messages.value.toMutableList()
+                                val index = currentList.indexOfFirst { it.id == msgId }
+                                if (index != -1) {
+                                    currentList[index] = currentList[index].copy(isDelivered = true)
+                                    _messages.value = currentList
                                 }
                             }
-                            "typing_status" -> {
-                                val sender = if (jsonObj.has("senderName") && !jsonObj.get("senderName").isJsonNull) jsonObj.get("senderName").asString else "Do'st"
-                                val status = if (jsonObj.has("status") && !jsonObj.get("status").isJsonNull) jsonObj.get("status").asString else "idle"
+                        }
+                        "typing_status" -> {
+                            val sender = if (jsonObj.has("senderName") && !jsonObj.get("senderName").isJsonNull) jsonObj.get("senderName").asString else "Do'st"
+                            val status = if (jsonObj.has("status") && !jsonObj.get("status").isJsonNull) jsonObj.get("status").asString else "idle"
+                            val senderDevId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
 
-                                val senderDevId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
-                                if (senderDevId != getDeviceId()) {
-                                    typingJob?.cancel()
-                                    when (status) {
-                                        "typing_text" -> {
-                                            _peerTypingStatus.value = "✏️ $sender matnli xabar yozmoqda..."
-                                            // Auto-clear after 4 seconds
-                                            typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                                                kotlinx.coroutines.delay(4000)
-                                                _peerTypingStatus.value = null
-                                            }
-                                        }
-                                        "typing_voice" -> {
-                                            _peerTypingStatus.value = "🎙️ $sender galasavoy yozmoqda..."
-                                            typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                                                kotlinx.coroutines.delay(5000)
-                                                _peerTypingStatus.value = null
-                                            }
-                                        }
-                                        else -> {
+                            if (senderDevId != getDeviceId()) {
+                                typingJob?.cancel()
+                                when (status) {
+                                    "typing_text" -> {
+                                        _peerTypingStatus.value = "✏️ $sender SIZGA MATNLI XABAR YOZMOQDA..."
+                                        typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                            kotlinx.coroutines.delay(6000)
                                             _peerTypingStatus.value = null
                                         }
+                                    }
+                                    "typing_voice" -> {
+                                        _peerTypingStatus.value = "🎙️ $sender SIZGA GALASAVOY YOZMOQDA..."
+                                        typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                            kotlinx.coroutines.delay(7000)
+                                            _peerTypingStatus.value = null
+                                        }
+                                    }
+                                    else -> {
+                                        _peerTypingStatus.value = null
                                     }
                                 }
                             }
