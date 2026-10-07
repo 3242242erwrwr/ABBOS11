@@ -102,9 +102,16 @@ class SosRepository(private val context: Context) {
                         "typing_status" -> {
                             val sender = if (jsonObj.has("senderName") && !jsonObj.get("senderName").isJsonNull) jsonObj.get("senderName").asString else "Do'st"
                             val status = if (jsonObj.has("status") && !jsonObj.get("status").isJsonNull) jsonObj.get("status").asString else "idle"
+                            val target = if (jsonObj.has("targetRecipient") && !jsonObj.get("targetRecipient").isJsonNull) jsonObj.get("targetRecipient").asString.trim() else ""
                             val senderDevId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
 
-                            if (senderDevId != getDeviceId()) {
+                            val myName = getUserName().trim()
+                            val isForMe = target.isEmpty()
+                                    || target.equals(myName, ignoreCase = true)
+                                    || myName.contains(target, ignoreCase = true)
+                                    || target.contains(myName, ignoreCase = true)
+
+                            if (senderDevId != getDeviceId() && isForMe) {
                                 typingJob?.cancel()
                                 when (status) {
                                     "typing_text" -> {

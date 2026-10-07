@@ -112,10 +112,10 @@ class WebSocketSosManager(
                     // Forward custom json signal (voice calls, signaling)
                     onCustomJsonReceivedListener?.invoke(messageObj)
 
-                    // CRITICAL ISOLATION FIX: Skip all ping, voice_audio, and call_ signaling frames from SOS message handler!
+                    // CRITICAL ISOLATION FIX: Skip all typing_status, delivery_ack, ping, voice_audio, and call_ signaling frames from SOS message handler!
                     if (messageObj.has("type")) {
                         val typeStr = messageObj.get("type")?.asString ?: ""
-                        if (typeStr == "ping" || typeStr.startsWith("call_") || typeStr.startsWith("voice_")) {
+                        if (typeStr == "typing_status" || typeStr == "delivery_ack" || typeStr == "ping" || typeStr.startsWith("call_") || typeStr.startsWith("voice_")) {
                             return
                         }
                     }
