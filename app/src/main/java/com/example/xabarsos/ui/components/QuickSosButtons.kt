@@ -79,6 +79,24 @@ fun QuickSosButtons(
 ) {
     var customMessage by remember { mutableStateOf("") }
 
+    androidx.compose.runtime.LaunchedEffect(isRecordingVoiceNote, selectedRecipient) {
+        if (isRecordingVoiceNote && selectedRecipient.isNotBlank()) {
+            while (isRecordingVoiceNote) {
+                onSendTypingStatus("typing_voice")
+                kotlinx.coroutines.delay(2500)
+            }
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(customMessage, selectedRecipient) {
+        if (customMessage.isNotBlank() && selectedRecipient.isNotBlank()) {
+            while (customMessage.isNotBlank()) {
+                onSendTypingStatus("typing_text")
+                kotlinx.coroutines.delay(3000)
+            }
+        }
+    }
+
     val infiniteTransition = rememberInfiniteTransition(label = "friendFlashing")
     val friendFlashingAlpha by infiniteTransition.animateFloat(
         initialValue = 0.35f,
