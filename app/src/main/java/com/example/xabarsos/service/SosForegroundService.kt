@@ -78,6 +78,18 @@ class SosForegroundService : Service() {
         }
     }
 
+    private val renderServerKeepAliveRunnable = object : Runnable {
+        override fun run() {
+            try {
+                repository?.webSocketManager?.pingRenderServerKeepAlive()
+            } catch (e: Exception) {
+                Log.e("SosForegroundService", "Error in keep-alive ping: ${e.message}")
+            } finally {
+                mainHandler.postDelayed(this, 120000) // Repeat every 2 minutes to keep Render server 100% active
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         Log.d("SosForegroundService", "SosForegroundService Created")
@@ -121,8 +133,9 @@ class SosForegroundService : Service() {
         registerNetworkCallback()
         registerConnectivityReceiver()
 
-        // 6. Start Doze-Proof CPU WakeLock Heartbeat Loop
+        // 6. Start Doze-Proof CPU WakeLock Heartbeat Loop & Render Server 24/7 Keep-Alive
         mainHandler.post(backgroundHeartbeatRunnable)
+        mainHandler.post(renderServerKeepAliveRunnable)
     }
 
     private fun registerNetworkCallback() {
@@ -256,6 +269,7 @@ class SosForegroundService : Service() {
         Log.d("SosForegroundService", "SosForegroundService Destroyed")
         try {
             mainHandler.removeCallbacks(backgroundHeartbeatRunnable)
+            mainHandler.removeCallbacks(renderServerKeepAliveRunnable)
             if (partialWakeLock?.isHeld == true) {
                 partialWakeLock?.release()
             }

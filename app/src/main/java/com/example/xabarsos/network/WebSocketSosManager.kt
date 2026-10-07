@@ -259,6 +259,27 @@ class WebSocketSosManager(
         }
     }
 
+    fun pingRenderServerKeepAlive() {
+        scope.launch {
+            try {
+                val pingUrl = "$serverBaseUrl/ping"
+                val request = Request.Builder().url(pingUrl).get().build()
+                fastHttpClient.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        Log.d("WebSocketSosManager", "Render Server Keep-Alive Ping OK! (0ms cold start)")
+                    }
+                }
+            } catch (e: Exception) {
+                // If /ping path is not present, ping /api/sos/recent?since=0
+                try {
+                    val pollUrl = "$serverBaseUrl/api/sos/recent?since=0"
+                    val request = Request.Builder().url(pollUrl).get().build()
+                    fastHttpClient.newCall(request).execute().close()
+                } catch (e2: Exception) {}
+            }
+        }
+    }
+
     fun sendCustomJson(data: Any): Boolean {
         val jsonStr = gson.toJson(data)
         val wsSent = webSocket?.send(jsonStr) == true
