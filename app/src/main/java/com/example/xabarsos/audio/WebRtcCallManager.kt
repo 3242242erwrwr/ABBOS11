@@ -88,9 +88,7 @@ class WebRtcCallManager(private val context: Context) {
                 isIncoming = false
             )
             _callState.value = CallState.OUTGOING_RINGING
-
-            createPeerConnection()
-            createOffer()
+            boostAudioVolume()
         } catch (t: Throwable) {
             Log.e("WebRtcCallManager", "Error starting outgoing call: ${t.message}")
         }
@@ -117,6 +115,7 @@ class WebRtcCallManager(private val context: Context) {
             stopRingtone()
             _callState.value = CallState.CONNECTED
             startCallTimer()
+            boostAudioVolume()
 
             createPeerConnection()
 
@@ -137,6 +136,11 @@ class WebRtcCallManager(private val context: Context) {
             stopRingtone()
             _callState.value = CallState.CONNECTED
             startCallTimer()
+            boostAudioVolume()
+
+            // Initiate WebRTC Offer after Peer Accepts Call
+            createPeerConnection()
+            createOffer()
         } catch (t: Throwable) {
             Log.e("WebRtcCallManager", "Error onCallAcceptedByPeer: ${t.message}")
         }
@@ -192,6 +196,21 @@ class WebRtcCallManager(private val context: Context) {
         }
     }
 
+    private fun boostAudioVolume() {
+        try {
+            val maxCallVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
+            audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxCallVol, 0)
+
+            val maxMusicVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusicVol, 0)
+
+            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+            audioManager.isSpeakerphoneOn = _isSpeakerOn.value
+        } catch (t: Throwable) {
+            Log.e("WebRtcCallManager", "Error boosting volume: ${t.message}")
+        }
+    }
+
     private fun createPeerConnection() {
         if (peerConnection != null) return
         try {
@@ -199,18 +218,31 @@ class WebRtcCallManager(private val context: Context) {
 
             val iceServers = listOf<PeerConnection.IceServer>(
                 PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer(),
-                PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer()
+                PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer(),
+                PeerConnection.IceServer.builder("stun:stun2.l.google.com:19302").createIceServer(),
+                PeerConnection.IceServer.builder("stun:stun3.l.google.com:19302").createIceServer()
             )
 
-            val rtcConfig = PeerConnection.RTCConfiguration(iceServers)
+            val rtcConfig = PeerConnection.RTCConfiguration(iceServers).apply {
+                sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
+                continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
+            }
 
             peerConnection = factory?.createPeerConnection(rtcConfig, object : PeerConnection.Observer {
-                override fun onSignalingChange(state: PeerConnection.SignalingState?) {}
+                override fun onSignalingChange(state: PeerConnection.SignalingState?) {
+                    Log.d("WebRtcCallManager", "Signaling State: $state")
+                }
+
                 override fun onIceConnectionChange(state: PeerConnection.IceConnectionState?) {
                     Log.d("WebRtcCallManager", "ICE Connection State: $state")
                 }
+
                 override fun onIceConnectionReceivingChange(p0: Boolean) {}
-                override fun onIceGatheringChange(state: PeerConnection.IceGatheringState?) {}
+
+                override fun onIceGatheringChange(state: PeerConnection.IceGatheringState?) {
+                    Log.d("WebRtcCallManager", "ICE Gathering State: $state")
+                }
+
                 override fun onIceCandidate(candidate: IceCandidate?) {
                     if (candidate != null) {
                         sendSignalingListener?.invoke(
@@ -225,12 +257,26 @@ class WebRtcCallManager(private val context: Context) {
                         )
                     }
                 }
+
                 override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
-                override fun onAddStream(stream: MediaStream?) {}
+
+                override fun onAddStream(stream: MediaStream?) {
+                    Log.d("WebRtcCallManager", "Remote Audio Stream Added!")
+                    if (stream != null && stream.audioTracks.isNotEmpty()) {
+                        stream.audioTracks[0].setEnabled(true)
+                    }
+                }
+
                 override fun onRemoveStream(stream: MediaStream?) {}
                 override fun onDataChannel(p0: DataChannel?) {}
                 override fun onRenegotiationNeeded() {}
-                override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {}
+
+                override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {
+                    Log.d("WebRtcCallManager", "Remote Audio Track Added!")
+                    if (receiver?.track() is AudioTrack) {
+                        (receiver.track() as AudioTrack).setEnabled(true)
+                    }
+                }
             })
 
             // Add local audio track
@@ -246,10 +292,7 @@ class WebRtcCallManager(private val context: Context) {
             localAudioTrack?.setEnabled(true)
 
             peerConnection?.addTrack(localAudioTrack, listOf("ARDAMS101"))
-
-            // Audio Mode
-            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-            audioManager.isSpeakerphoneOn = _isSpeakerOn.value
+            boostAudioVolume()
         } catch (t: Throwable) {
             Log.e("WebRtcCallManager", "Error creating PeerConnection: ${t.message}")
         }
