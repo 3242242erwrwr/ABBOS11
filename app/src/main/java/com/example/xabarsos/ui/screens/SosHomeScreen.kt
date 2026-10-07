@@ -92,6 +92,7 @@ fun SosHomeScreen(
 
     val isRecordingVoiceNote by viewModel.isRecordingVoiceNote.collectAsState()
     val recordingDurationSeconds by viewModel.recordingDurationSeconds.collectAsState()
+    val selectedVoiceEffect by viewModel.selectedVoiceEffect.collectAsState()
     val peerTypingStatus by viewModel.peerTypingStatus.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -274,6 +275,8 @@ fun SosHomeScreen(
                             onSelectRecipient = { selectedRecipient = it },
                             isRecordingVoiceNote = isRecordingVoiceNote,
                             recordingDurationSeconds = recordingDurationSeconds,
+                            selectedVoiceEffect = selectedVoiceEffect,
+                            onSelectVoiceEffect = { effect -> viewModel.setSelectedVoiceEffect(effect) },
                             onStartVoiceNoteRecording = {
                                 if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                                     viewModel.startVoiceNoteRecording()

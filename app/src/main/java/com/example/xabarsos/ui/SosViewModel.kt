@@ -3,6 +3,7 @@ package com.example.xabarsos.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.example.xabarsos.audio.SosSoundType
+import com.example.xabarsos.audio.VoiceEffect
 import com.example.xabarsos.data.SosRepository
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.ConnectionStatus
@@ -24,7 +25,12 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val isRecordingVoiceNote: StateFlow<Boolean> = repository.voiceNoteManager.isRecording
     val isPlayingVoiceNote: StateFlow<Boolean> = repository.voiceNoteManager.isPlaying
     val recordingDurationSeconds: StateFlow<Int> = repository.voiceNoteManager.recordingDurationSeconds
+    val selectedVoiceEffect: StateFlow<VoiceEffect> = repository.voiceNoteManager.selectedVoiceEffect
     val peerTypingStatus: StateFlow<String?> = repository.peerTypingStatus
+
+    fun setSelectedVoiceEffect(effect: VoiceEffect) {
+        repository.voiceNoteManager.setSelectedVoiceEffect(effect)
+    }
 
     fun sendTypingStatus(status: String, targetRecipient: String = "BARCHAGA") {
         repository.sendTypingStatus(status, targetRecipient)

@@ -54,6 +54,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.xabarsos.audio.VoiceEffect
 import com.example.xabarsos.ui.theme.EmergencyPink
 import com.example.xabarsos.ui.theme.EmergencyRed
 
@@ -65,6 +66,8 @@ fun QuickSosButtons(
     onSelectRecipient: (String) -> Unit = {},
     isRecordingVoiceNote: Boolean = false,
     recordingDurationSeconds: Int = 0,
+    selectedVoiceEffect: VoiceEffect = VoiceEffect.NORMAL,
+    onSelectVoiceEffect: (VoiceEffect) -> Unit = {},
     onStartVoiceNoteRecording: () -> Unit = {},
     onStopVoiceNoteAndSend: () -> Unit = {},
     onCancelVoiceNoteRecording: () -> Unit = {},
@@ -507,6 +510,45 @@ fun QuickSosButtons(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
+
+            // VOICE EFFECT SELECTOR CHIPS (🎭 OVOZ EFFEKTI)
+            Text(
+                text = "🎭 OVOZ EFFEKTI (GALASAVOY UCHUN):",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFFD54F)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                VoiceEffect.entries.forEach { effect ->
+                    val isSelected = selectedVoiceEffect == effect
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { onSelectVoiceEffect(effect) },
+                        label = {
+                            Text(
+                                text = "${effect.emoji} ${effect.displayName}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFF00E676),
+                            selectedLabelColor = Color.Black,
+                            containerColor = Color(0xFF1E2230),
+                            labelColor = Color.LightGray
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Custom Message Section (PERFECT VERTICALLY CENTERED BasicTextField OR GALASAVOY RECORDING BAR)
             Text(
