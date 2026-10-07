@@ -68,6 +68,7 @@ fun QuickSosButtons(
     onStartVoiceNoteRecording: () -> Unit = {},
     onStopVoiceNoteAndSend: () -> Unit = {},
     onCancelVoiceNoteRecording: () -> Unit = {},
+    onSendTypingStatus: (String) -> Unit = {},
     onOpenAddFriendDialog: () -> Unit = {},
     onSendSos: (text: String, recipient: String) -> Unit,
     onStopAllAlerts: () -> Unit = {}
@@ -551,7 +552,10 @@ fun QuickSosButtons(
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Button(
-                                onClick = onCancelVoiceNoteRecording,
+                                onClick = {
+                                    onSendTypingStatus("idle")
+                                    onCancelVoiceNoteRecording()
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF333344),
                                     contentColor = Color.LightGray
@@ -566,7 +570,10 @@ fun QuickSosButtons(
                             Spacer(modifier = Modifier.width(6.dp))
 
                             Button(
-                                onClick = onStopVoiceNoteAndSend,
+                                onClick = {
+                                    onSendTypingStatus("idle")
+                                    onStopVoiceNoteAndSend()
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF00E676),
                                     contentColor = Color.Black
@@ -587,7 +594,14 @@ fun QuickSosButtons(
                 ) {
                     BasicTextField(
                         value = customMessage,
-                        onValueChange = { customMessage = it },
+                        onValueChange = {
+                            customMessage = it
+                            if (it.isNotBlank()) {
+                                onSendTypingStatus("typing_text")
+                            } else {
+                                onSendTypingStatus("idle")
+                            }
+                        },
                         singleLine = true,
                         textStyle = TextStyle(
                             fontSize = 13.sp,
@@ -622,6 +636,7 @@ fun QuickSosButtons(
                     Button(
                         onClick = {
                             if (customMessage.isNotBlank()) {
+                                onSendTypingStatus("idle")
                                 onSendSos(customMessage, selectedRecipient)
                                 customMessage = ""
                             }
@@ -649,7 +664,10 @@ fun QuickSosButtons(
 
                     // GALASAVOY BUTTON (Ovozli Xabar)
                     Button(
-                        onClick = onStartVoiceNoteRecording,
+                        onClick = {
+                            onSendTypingStatus("typing_voice")
+                            onStartVoiceNoteRecording()
+                        },
                         shape = RoundedCornerShape(10.dp),
                         contentPadding = PaddingValues(0.dp),
                         colors = ButtonDefaults.buttonColors(

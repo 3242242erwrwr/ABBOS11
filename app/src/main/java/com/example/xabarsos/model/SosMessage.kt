@@ -18,5 +18,6 @@ data class SosMessage(
     val channel: MessageChannel = MessageChannel.INTERNET,
     val isIncoming: Boolean = true,
     val isUrgent: Boolean = true,
-    val audioData: String? = null
+    val audioData: String? = null,
+    val isDelivered: Boolean = false
 )

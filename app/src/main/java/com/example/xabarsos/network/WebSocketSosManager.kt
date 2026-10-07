@@ -126,6 +126,9 @@ class WebSocketSosManager(
                         val audioDataStr = if (messageObj.has("audioData") && !messageObj.get("audioData").isJsonNull) {
                             messageObj.get("audioData").asString
                         } else null
+                        val isDeliveredBool = if (messageObj.has("isDelivered") && !messageObj.get("isDelivered").isJsonNull) {
+                            messageObj.get("isDelivered").asBoolean
+                        } else false
 
                         if (msgText.isNotBlank()) {
                             val sosMessage = SosMessage(
@@ -137,7 +140,8 @@ class WebSocketSosManager(
                                 timestamp = messageObj.get("timestamp")?.asLong ?: System.currentTimeMillis(),
                                 channel = MessageChannel.INTERNET,
                                 isIncoming = true,
-                                audioData = audioDataStr
+                                audioData = audioDataStr,
+                                isDelivered = isDeliveredBool
                             )
                             onMessageReceivedListener?.invoke(sosMessage)
                         }

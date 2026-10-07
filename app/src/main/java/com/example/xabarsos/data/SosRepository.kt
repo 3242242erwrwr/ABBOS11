@@ -9,9 +9,11 @@ import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
 import com.example.xabarsos.network.WebSocketSosManager
 import com.example.xabarsos.notification.SosNotificationManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 class SosRepository(private val context: Context) {
@@ -53,13 +55,84 @@ class SosRepository(private val context: Context) {
     private val _friendsList = MutableStateFlow(getFriendsList())
     val friendsList: StateFlow<List<String>> = _friendsList.asStateFlow()
 
+    private val _peerTypingStatus = MutableStateFlow<String?>(null)
+    val peerTypingStatus: StateFlow<String?> = _peerTypingStatus.asStateFlow()
+
     private val processedMessageIds = HashSet<String>()
+    private var typingJob: kotlinx.coroutines.Job? = null
     @Volatile
     private var lastMutedTimestamp: Long = 0L
     @Volatile
     private var lastClearedTimestamp: Long = prefs.getLong("last_cleared_ts", 0L)
 
     init {
+        // Setup listener for custom signaling (Delivery ACK & Typing Status)
+        webSocketManager.setOnCustomJsonReceivedListener { jsonObj ->
+            try {
+                if (jsonObj.has("type") && !jsonObj.get("type").isJsonNull) {
+                    val type = jsonObj.get("type").asString
+                    val myName = getUserName().trim()
+                    val target = if (jsonObj.has("targetRecipient") && !jsonObj.get("targetRecipient").isJsonNull) {
+                        jsonObj.get("targetRecipient").asString.trim()
+                    } else ""
+
+                    val isForMe = target.equals("BARCHAGA", ignoreCase = true)
+                            || target.equals("ALL", ignoreCase = true)
+                            || target.isEmpty()
+                            || target.equals(myName, ignoreCase = true)
+                            || myName.contains(target, ignoreCase = true)
+                            || target.contains(myName, ignoreCase = true)
+
+                    if (isForMe) {
+                        when (type) {
+                            "delivery_ack" -> {
+                                val msgId = if (jsonObj.has("messageId") && !jsonObj.get("messageId").isJsonNull) jsonObj.get("messageId").asString else ""
+                                if (msgId.isNotEmpty()) {
+                                    val currentList = _messages.value.toMutableList()
+                                    val index = currentList.indexOfFirst { it.id == msgId }
+                                    if (index != -1) {
+                                        currentList[index] = currentList[index].copy(isDelivered = true)
+                                        _messages.value = currentList
+                                    }
+                                }
+                            }
+                            "typing_status" -> {
+                                val sender = if (jsonObj.has("senderName") && !jsonObj.get("senderName").isJsonNull) jsonObj.get("senderName").asString else "Do'st"
+                                val status = if (jsonObj.has("status") && !jsonObj.get("status").isJsonNull) jsonObj.get("status").asString else "idle"
+
+                                val senderDevId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
+                                if (senderDevId != getDeviceId()) {
+                                    typingJob?.cancel()
+                                    when (status) {
+                                        "typing_text" -> {
+                                            _peerTypingStatus.value = "✏️ $sender matnli xabar yozmoqda..."
+                                            // Auto-clear after 4 seconds
+                                            typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                                kotlinx.coroutines.delay(4000)
+                                                _peerTypingStatus.value = null
+                                            }
+                                        }
+                                        "typing_voice" -> {
+                                            _peerTypingStatus.value = "🎙️ $sender galasavoy yozmoqda..."
+                                            typingJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                                kotlinx.coroutines.delay(5000)
+                                                _peerTypingStatus.value = null
+                                            }
+                                        }
+                                        else -> {
+                                            _peerTypingStatus.value = null
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SosRepository", "Error handling custom json: ${e.message}")
+            }
+        }
+
         // Setup listener for WebSocket messages
         webSocketManager.setOnMessageReceivedListener { sosMessage ->
             processIncomingSosMessage(sosMessage)
@@ -129,6 +202,19 @@ class SosRepository(private val context: Context) {
         if (currentList.none { it.id == sosMessage.id }) {
             currentList.add(0, sosMessage)
             _messages.value = currentList
+
+            // Send Delivery ACK back to sender so sender sees ✓✓ Delivered!
+            if (sosMessage.deviceId.isNotBlank() && sosMessage.deviceId != myDeviceId) {
+                webSocketManager.sendCustomJson(
+                    mapOf(
+                        "type" to "delivery_ack",
+                        "messageId" to sosMessage.id,
+                        "senderName" to myName,
+                        "senderDeviceId" to myDeviceId,
+                        "targetRecipient" to sosMessage.senderName
+                    )
+                )
+            }
 
             // Ignore old messages created BEFORE last STOP/mute timestamp!
             if (sosMessage.timestamp <= lastMutedTimestamp) {
@@ -201,6 +287,18 @@ class SosRepository(private val context: Context) {
 
         // 3. Broadcast via Bluetooth LE (Offline local mesh)
         bluetoothManager.broadcastSosOffline(currentSender, myDeviceId, formattedTarget, messageText)
+    }
+
+    fun sendTypingStatus(status: String, targetRecipient: String = "BARCHAGA") {
+        webSocketManager.sendCustomJson(
+            mapOf(
+                "type" to "typing_status",
+                "status" to status,
+                "senderName" to getUserName(),
+                "senderDeviceId" to getDeviceId(),
+                "targetRecipient" to targetRecipient
+            )
+        )
     }
 
     fun saveUserName(name: String) {

@@ -24,6 +24,11 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val isRecordingVoiceNote: StateFlow<Boolean> = repository.voiceNoteManager.isRecording
     val isPlayingVoiceNote: StateFlow<Boolean> = repository.voiceNoteManager.isPlaying
     val recordingDurationSeconds: StateFlow<Int> = repository.voiceNoteManager.recordingDurationSeconds
+    val peerTypingStatus: StateFlow<String?> = repository.peerTypingStatus
+
+    fun sendTypingStatus(status: String, targetRecipient: String = "BARCHAGA") {
+        repository.sendTypingStatus(status, targetRecipient)
+    }
 
     fun startVoiceNoteRecording() {
         repository.voiceNoteManager.startRecording()

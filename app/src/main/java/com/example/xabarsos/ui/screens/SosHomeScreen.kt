@@ -92,6 +92,7 @@ fun SosHomeScreen(
 
     val isRecordingVoiceNote by viewModel.isRecordingVoiceNote.collectAsState()
     val recordingDurationSeconds by viewModel.recordingDurationSeconds.collectAsState()
+    val peerTypingStatus by viewModel.peerTypingStatus.collectAsState()
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = remember { context.getSharedPreferences("xabar_sos_prefs", Context.MODE_PRIVATE) }
@@ -232,6 +233,33 @@ fun SosHomeScreen(
                     )
                 }
 
+                // Live Peer Typing / Voice Recording Status Badge
+                peerTypingStatus?.let { statusText ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 4.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF00B0FF).copy(alpha = 0.22f)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = statusText,
+                                color = Color(0xFF00B0FF),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -258,6 +286,9 @@ fun SosHomeScreen(
                             },
                             onCancelVoiceNoteRecording = {
                                 viewModel.cancelVoiceNoteRecording()
+                            },
+                            onSendTypingStatus = { status ->
+                                viewModel.sendTypingStatus(status, selectedRecipient)
                             },
                             onOpenAddFriendDialog = { showAddFriendDialog = true },
                             onSendSos = { sosText, targetRecipient ->
@@ -402,6 +433,16 @@ fun SosMessageCard(
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (!message.isIncoming) {
+                        Text(
+                            text = if (message.isDelivered) "✓✓ Yetib bordi" else "✓ Yuborildi",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (message.isDelivered) Color(0xFF00E676) else Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+
                     Text(
                         text = formattedTime,
                         fontSize = 11.sp,
