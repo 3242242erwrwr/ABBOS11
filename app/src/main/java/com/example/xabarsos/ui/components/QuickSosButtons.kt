@@ -197,14 +197,15 @@ fun QuickSosButtons(
             Spacer(modifier = Modifier.height(4.dp))
 
             if (isRecordingVoiceNote) {
-                // Voice Recording Live Bar (Galasavoy)
+                // Ultra-Modern Voice Recording Live Bar with Frequency Waveforms (Galasavoy)
                 val formattedRecDuration = String.format(java.util.Locale.getDefault(), "%02d:%02d", recordingDurationSeconds / 60, recordingDurationSeconds % 60)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = EmergencyRed.copy(alpha = 0.25f)
+                        containerColor = EmergencyRed.copy(alpha = 0.22f)
                     ),
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, EmergencyRed.copy(alpha = 0.5f))
                 ) {
                     Row(
                         modifier = Modifier
@@ -220,11 +221,14 @@ fun QuickSosButtons(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Yozilmoqda...",
-                                color = Color.White,
-                                fontSize = 11.sp
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // LIVE ANIMATED VOICE AUDIO FREQUENCY WAVEFORM VISUALIZER
+                            LiveAudioWaveformVisualizer(
+                                isRecording = true,
+                                width = 80.dp,
+                                height = 24.dp
                             )
                         }
 
