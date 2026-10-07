@@ -126,6 +126,9 @@ class WebSocketSosManager(
                         val audioDataStr = if (messageObj.has("audioData") && !messageObj.get("audioData").isJsonNull) {
                             messageObj.get("audioData").asString
                         } else null
+                        val videoDataStr = if (messageObj.has("videoData") && !messageObj.get("videoData").isJsonNull) {
+                            messageObj.get("videoData").asString
+                        } else null
                         val isDeliveredBool = if (messageObj.has("isDelivered") && !messageObj.get("isDelivered").isJsonNull) {
                             messageObj.get("isDelivered").asBoolean
                         } else false
@@ -141,6 +144,7 @@ class WebSocketSosManager(
                                 channel = MessageChannel.INTERNET,
                                 isIncoming = true,
                                 audioData = audioDataStr,
+                                videoData = videoDataStr,
                                 isDelivered = isDeliveredBool
                             )
                             onMessageReceivedListener?.invoke(sosMessage)
@@ -225,6 +229,9 @@ class WebSocketSosManager(
                             val audioDataStr = if (msgObj.has("audioData") && !msgObj.get("audioData").isJsonNull) {
                                 msgObj.get("audioData").asString
                             } else null
+                            val videoDataStr = if (msgObj.has("videoData") && !msgObj.get("videoData").isJsonNull) {
+                                msgObj.get("videoData").asString
+                            } else null
 
                             val sosMsg = SosMessage(
                                 id = msgObj.get("id")?.asString ?: java.util.UUID.randomUUID().toString(),
@@ -235,7 +242,8 @@ class WebSocketSosManager(
                                 timestamp = msgObj.get("timestamp")?.asLong ?: System.currentTimeMillis(),
                                 channel = MessageChannel.INTERNET,
                                 isIncoming = true,
-                                audioData = audioDataStr
+                                audioData = audioDataStr,
+                                videoData = videoDataStr
                             )
                             parsedList.add(sosMsg)
                         }
@@ -267,6 +275,9 @@ class WebSocketSosManager(
         )
         if (!message.audioData.isNullOrBlank()) {
             messageMap["audioData"] = message.audioData
+        }
+        if (!message.videoData.isNullOrBlank()) {
+            messageMap["videoData"] = message.videoData
         }
 
         val messageJson = gson.toJson(messageMap)

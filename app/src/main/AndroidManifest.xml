@@ -2,9 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Microphone & Audio Settings for Voice Calls without phone numbers -->
+    <!-- Camera, Microphone & Audio Settings for Video Notes and Voice Calls -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <!-- Internet & Network permissions for Wi-Fi and 4G/LTE SOS messaging -->
     <uses-permission android:name="android.permission.INTERNET" />

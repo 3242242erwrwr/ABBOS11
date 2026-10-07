@@ -19,5 +19,6 @@ data class SosMessage(
     val isIncoming: Boolean = true,
     val isUrgent: Boolean = true,
     val audioData: String? = null,
+    val videoData: String? = null,
     val isDelivered: Boolean = false
 )

@@ -42,6 +42,7 @@ import com.example.xabarsos.ui.theme.EmergencyRed
 fun MessagesHistoryDialog(
     messages: List<SosMessage>,
     onPlayVoiceNote: (String) -> Unit = {},
+    onPlayVideoNote: (String, String) -> Unit = { _, _ -> },
     onDeleteSingleMessage: (String) -> Unit,
     onClearHistory: () -> Unit,
     onDismiss: () -> Unit
@@ -125,6 +126,7 @@ fun MessagesHistoryDialog(
                             SosMessageCard(
                                 message = message,
                                 onPlayVoiceNote = onPlayVoiceNote,
+                                onPlayVideoNote = onPlayVideoNote,
                                 onDeleteMessage = { onDeleteSingleMessage(message.id) }
                             )
                             Spacer(modifier = Modifier.height(8.dp))

@@ -44,6 +44,10 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
         repository.sendVoiceNote(targetRecipient)
     }
 
+    fun sendVideoNote(base64Video: String, targetRecipient: String = "BARCHAGA") {
+        repository.sendVideoNote(base64Video, targetRecipient)
+    }
+
     fun cancelVoiceNoteRecording() {
         repository.voiceNoteManager.stopRecordingAndGetBase64()
     }
