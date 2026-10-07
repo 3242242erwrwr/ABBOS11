@@ -108,34 +108,46 @@ fun QuickSosButtons(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // LEFT SIDE PANEL: TELEGRAM-STYLE FRIENDS SPISOK (38% Width)
+                // LEFT SIDE PANEL: TELEGRAM-STYLE FRIENDS SPISOK (40% Width - Full Height 340dp)
                 Card(
                     modifier = Modifier
-                        .weight(0.38f)
-                        .height(200.dp),
+                        .weight(0.40f)
+                        .height(340.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color(0xFF111420)
                     ),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f))
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f))
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(6.dp)
+                            .padding(8.dp)
                     ) {
-                        Text(
-                            text = "🤝 SPISOK",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color(0xFF00B0FF)
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "🤝 SPISOK",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = Color(0xFF00B0FF)
+                            )
+                            Text(
+                                text = "${friendsList.size} ta",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                color = Color.Gray
+                            )
+                        }
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         LazyColumn(
                             modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             if (isBroadcastToAllEnabled) {
                                 item {
@@ -147,16 +159,16 @@ fun QuickSosButtons(
                                         colors = CardDefaults.cardColors(
                                             containerColor = if (isSelected) EmergencyRed else Color(0xFF1E2230)
                                         ),
-                                        shape = RoundedCornerShape(6.dp)
+                                        shape = RoundedCornerShape(8.dp)
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
                                                 text = "📢 Barchaga",
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 10.sp,
+                                                fontSize = 11.sp,
                                                 color = Color.White,
                                                 maxLines = 1
                                             )
@@ -180,16 +192,16 @@ fun QuickSosButtons(
                                     colors = CardDefaults.cardColors(
                                         containerColor = if (isSelected) Color(0xFF00B0FF) else Color(0xFF1E2230)
                                     ),
-                                    shape = RoundedCornerShape(6.dp)
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
                                             text = "👤 $friendName",
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 10.sp,
+                                            fontSize = 11.sp,
                                             color = Color.White,
                                             maxLines = 1
                                         )
@@ -198,7 +210,7 @@ fun QuickSosButtons(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Button(
                             onClick = onOpenAddFriendDialog,
@@ -206,65 +218,70 @@ fun QuickSosButtons(
                                 containerColor = Color(0xFF00B0FF).copy(alpha = 0.25f),
                                 contentColor = Color(0xFF00B0FF)
                             ),
-                            shape = RoundedCornerShape(6.dp),
-                            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(28.dp)
+                                .height(32.dp)
                         ) {
-                            Text("➕ Qo'shish", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text("➕ Qo'shish", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
-                // RIGHT SIDE PANEL: TARGET BADGE & VOICE EFFECTS (62% Width)
+                // RIGHT SIDE PANEL: TARGET BADGE & VOICE EFFECTS (60% Width)
                 Column(
-                    modifier = Modifier.weight(0.62f)
+                    modifier = Modifier
+                        .weight(0.60f)
+                        .height(340.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Selected Target Indicator Badge
-                    Text(
-                        text = "🎯 Kimga: ${if (selectedRecipient == "BARCHAGA") "📢 Barchaga" else "👤 $selectedRecipient"}",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFD54F)
-                    )
+                    Column {
+                        // Selected Target Indicator Badge
+                        Text(
+                            text = "🎯 Kimga: ${if (selectedRecipient == "BARCHAGA") "📢 Barchaga" else "👤 $selectedRecipient"}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFFD54F)
+                        )
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    // VOICE EFFECT SELECTOR CHIPS (🎭 OVOZ EFFEKTI)
-                    Text(
-                        text = "🎭 OVOZ EFFEKTI:",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.LightGray
-                    )
+                        // VOICE EFFECT SELECTOR CHIPS (🎭 OVOZ EFFEKTI)
+                        Text(
+                            text = "🎭 OVOZ EFFEKTI:",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.LightGray
+                        )
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        VoiceEffect.entries.forEach { effect ->
-                            val isSelected = selectedVoiceEffect == effect
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { onSelectVoiceEffect(effect) },
-                                label = {
-                                    Text(
-                                        text = "${effect.emoji} ${effect.displayName}",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            VoiceEffect.entries.forEach { effect ->
+                                val isSelected = selectedVoiceEffect == effect
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { onSelectVoiceEffect(effect) },
+                                    label = {
+                                        Text(
+                                            text = "${effect.emoji} ${effect.displayName}",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = Color(0xFF00E676),
+                                        selectedLabelColor = Color.Black,
+                                        containerColor = Color(0xFF1E2230),
+                                        labelColor = Color.LightGray
                                     )
-                                },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = Color(0xFF00E676),
-                                    selectedLabelColor = Color.Black,
-                                    containerColor = Color(0xFF1E2230),
-                                    labelColor = Color.LightGray
                                 )
-                            )
+                            }
                         }
                     }
                 }
