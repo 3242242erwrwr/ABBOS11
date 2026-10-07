@@ -175,15 +175,17 @@ fun QuickSosButtons(
                             items(friendsList) { friendName ->
                                 val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
                                 val isThisFriendTyping = typingSenderName != null && (typingSenderName.equals(friendName, ignoreCase = true) || typingSenderName.contains(friendName, ignoreCase = true))
+                                val isVoiceTyping = isThisFriendTyping && typingStatusType == "typing_voice"
+                                val flashColor = if (isVoiceTyping) Color(0xFF00E676) else Color(0xFFFF1744)
 
                                 val cardBgColor = when {
-                                    isThisFriendTyping -> Color(0xFFFF1744).copy(alpha = friendFlashingAlpha)
+                                    isThisFriendTyping -> flashColor.copy(alpha = friendFlashingAlpha)
                                     isSelected -> Color(0xFF00B0FF)
                                     else -> Color(0xFF1E2230)
                                 }
 
                                 val cardBorder = if (isThisFriendTyping) {
-                                    BorderStroke(2.dp, Color(0xFFFF1744).copy(alpha = friendFlashingAlpha))
+                                    BorderStroke(2.dp, flashColor.copy(alpha = friendFlashingAlpha))
                                 } else null
 
                                 Card(

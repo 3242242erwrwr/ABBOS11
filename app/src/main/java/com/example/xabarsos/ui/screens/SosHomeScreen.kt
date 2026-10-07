@@ -272,18 +272,21 @@ fun SosHomeScreen(
                     )
                 }
 
-                // Live Peer Typing / Voice Recording Flashing Red Status Banner
+                // Live Peer Typing / Voice Recording Flashing Status Banner
                 peerTypingStatus?.let { statusText ->
+                    val isVoice = typingStatusType == "typing_voice"
+                    val bannerColor = if (isVoice) Color(0xFF00E676) else Color(0xFFFF1744)
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                             .border(
-                                BorderStroke(2.dp, Color(0xFFFF1744).copy(alpha = flashingRedAlpha)),
+                                BorderStroke(2.dp, bannerColor.copy(alpha = flashingRedAlpha)),
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFFF1744).copy(alpha = flashingRedAlpha * 0.35f)
+                            containerColor = bannerColor.copy(alpha = flashingRedAlpha * 0.35f)
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
