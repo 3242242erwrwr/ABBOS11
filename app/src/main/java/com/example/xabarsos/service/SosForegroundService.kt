@@ -66,14 +66,14 @@ class SosForegroundService : Service() {
                     PowerManager.PARTIAL_WAKE_LOCK,
                     "XABARSOS::HeartbeatSyncLock"
                 )
-                tempWakeLock.acquire(500) // Acquire WakeLock for 500ms
+                tempWakeLock.acquire(400) // Acquire WakeLock for 400ms
 
                 repository?.webSocketManager?.connect()
                 triggerImmediateSync()
             } catch (e: Exception) {
                 Log.e("SosForegroundService", "Error in heartbeat: ${e.message}")
             } finally {
-                mainHandler.postDelayed(this, 2500) // Repeat every 2.5s for instant 0.1s message delivery
+                mainHandler.postDelayed(this, 1000) // Repeat every 1.0s for instant message delivery on 1st send
             }
         }
     }

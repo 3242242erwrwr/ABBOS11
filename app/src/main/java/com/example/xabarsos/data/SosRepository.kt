@@ -293,6 +293,7 @@ class SosRepository(private val context: Context) {
         }
 
         // 2. Broadcast via WebSocket (Wi-Fi / 4G Internet)
+        webSocketManager.connect()
         webSocketManager.sendSosMessage(sosMessage)
 
         // 3. Broadcast via Bluetooth LE (Offline local mesh)
@@ -413,6 +414,7 @@ class SosRepository(private val context: Context) {
             currentList.add(0, sosMessage)
             _messages.value = currentList
 
+            webSocketManager.connect()
             webSocketManager.sendSosMessage(sosMessage)
             bluetoothManager.broadcastSosOffline(currentSender, myDeviceId, formattedTarget, "🎙️ OVOZLI XABAR (GALASAVOY)")
         }
@@ -440,6 +442,7 @@ class SosRepository(private val context: Context) {
             currentList.add(0, sosMessage)
             _messages.value = currentList
 
+            webSocketManager.connect()
             webSocketManager.sendSosMessage(sosMessage)
             bluetoothManager.broadcastSosOffline(currentSender, myDeviceId, formattedTarget, "📹 DOIRA VIDEO XABAR")
         }
