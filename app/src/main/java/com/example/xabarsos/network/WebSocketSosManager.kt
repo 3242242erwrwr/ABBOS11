@@ -213,9 +213,13 @@ class WebSocketSosManager(
                         for (i in 0 until messagesArray.size()) {
                             val msgObj = messagesArray.get(i).asJsonObject
 
-                            // SKIP voice call signals from HTTP polling
+                            // Forward typing_status and delivery_ack to custom listener even from HTTP polling
                             if (msgObj.has("type")) {
                                 val typeStr = msgObj.get("type")?.asString ?: ""
+                                if (typeStr == "typing_status" || typeStr == "delivery_ack") {
+                                    onCustomJsonReceivedListener?.invoke(msgObj)
+                                    continue
+                                }
                                 if (typeStr == "ping" || typeStr.startsWith("call_") || typeStr.startsWith("voice_")) {
                                     continue
                                 }
