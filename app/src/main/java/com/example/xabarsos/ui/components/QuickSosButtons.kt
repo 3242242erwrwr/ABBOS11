@@ -85,6 +85,8 @@ fun QuickSosButtons(
                 onSendTypingStatus("typing_voice")
                 kotlinx.coroutines.delay(2500)
             }
+        } else {
+            onSendTypingStatus("idle")
         }
     }
 
@@ -94,6 +96,8 @@ fun QuickSosButtons(
                 onSendTypingStatus("typing_text")
                 kotlinx.coroutines.delay(3000)
             }
+        } else {
+            onSendTypingStatus("idle")
         }
     }
 
