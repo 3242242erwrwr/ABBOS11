@@ -23,11 +23,11 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     val connectionStatus: StateFlow<ConnectionStatus> = repository.webSocketManager.connectionStatus
     val isScanningBluetooth: StateFlow<Boolean> = repository.bluetoothManager.isScanning
 
-    val callState: StateFlow<CallState> = repository.voiceCallManager.callState
-    val currentCallSession: StateFlow<CallSession?> = repository.voiceCallManager.currentSession
-    val isMuted: StateFlow<Boolean> = repository.voiceCallManager.isMuted
-    val isSpeakerOn: StateFlow<Boolean> = repository.voiceCallManager.isSpeakerOn
-    val callDurationSeconds: StateFlow<Int> = repository.voiceCallManager.callDurationSeconds
+    val callState: StateFlow<CallState> = repository.webRtcCallManager.callState
+    val currentCallSession: StateFlow<CallSession?> = repository.webRtcCallManager.currentSession
+    val isMuted: StateFlow<Boolean> = repository.webRtcCallManager.isMuted
+    val isSpeakerOn: StateFlow<Boolean> = repository.webRtcCallManager.isSpeakerOn
+    val callDurationSeconds: StateFlow<Int> = repository.webRtcCallManager.callDurationSeconds
 
     fun startVoiceCall(peerName: String, peerDeviceId: String = "") {
         repository.startVoiceCall(peerName, peerDeviceId)
@@ -42,11 +42,11 @@ class SosViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun toggleMute() {
-        repository.voiceCallManager.toggleMute()
+        repository.webRtcCallManager.toggleMute()
     }
 
     fun toggleSpeaker() {
-        repository.voiceCallManager.toggleSpeaker()
+        repository.webRtcCallManager.toggleSpeaker()
     }
 
     fun sendSos(text: String, targetRecipient: String = "BARCHAGA") {

@@ -3,7 +3,7 @@ package com.example.xabarsos.data
 import android.content.Context
 import com.example.xabarsos.audio.SosAlertManager
 import com.example.xabarsos.audio.SosSoundType
-import com.example.xabarsos.audio.VoiceCallManager
+import com.example.xabarsos.audio.WebRtcCallManager
 import com.example.xabarsos.bluetooth.BluetoothSosManager
 import com.example.xabarsos.model.MessageChannel
 import com.example.xabarsos.model.SosMessage
@@ -33,7 +33,7 @@ class SosRepository(private val context: Context) {
     val notificationManager = SosNotificationManager(context)
     val webSocketManager = WebSocketSosManager(getServerUrl())
     val bluetoothManager = BluetoothSosManager(context)
-    val voiceCallManager = VoiceCallManager(context)
+    val webRtcCallManager = WebRtcCallManager(context)
 
     private val _messages = MutableStateFlow<List<SosMessage>>(emptyList())
     val messages: StateFlow<List<SosMessage>> = _messages.asStateFlow()
@@ -60,24 +60,15 @@ class SosRepository(private val context: Context) {
     private var lastClearedTimestamp: Long = prefs.getLong("last_cleared_ts", 0L)
 
     init {
-        // Setup audio stream listener for Voice Calls
-        voiceCallManager.setSendAudioChunkListener { base64Audio ->
-            val session = voiceCallManager.currentSession.value
-            if (session != null) {
-                webSocketManager.sendCustomJson(
-                    mapOf(
-                        "type" to "voice_audio",
-                        "callId" to session.callId,
-                        "targetRecipient" to session.peerName,
-                        "senderName" to getUserName(),
-                        "senderDeviceId" to getDeviceId(),
-                        "audioData" to base64Audio
-                    )
-                )
-            }
+        // Setup WebRTC signaling listener
+        webRtcCallManager.setSendSignalingListener { map ->
+            val completeMap = map.toMutableMap()
+            completeMap["senderName"] = getUserName()
+            completeMap["senderDeviceId"] = getDeviceId()
+            webSocketManager.sendCustomJson(completeMap)
         }
 
-        // Setup listener for custom signaling (Voice Calls)
+        // Setup listener for custom signaling (WebRTC Voice Calls)
         webSocketManager.setOnCustomJsonReceivedListener { jsonObj ->
             try {
                 if (jsonObj.has("type") && !jsonObj.get("type").isJsonNull) {
@@ -100,27 +91,40 @@ class SosRepository(private val context: Context) {
                                 val callerName = if (jsonObj.has("senderName") && !jsonObj.get("senderName").isJsonNull) jsonObj.get("senderName").asString else "Noma'lum"
                                 val callerDeviceId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
                                 if (callerDeviceId != getDeviceId()) {
-                                    voiceCallManager.receiveIncomingCall(callId, callerName, callerDeviceId)
+                                    webRtcCallManager.receiveIncomingCall(callId, callerName, callerDeviceId)
                                 }
                             }
                             "call_answer" -> {
-                                voiceCallManager.onCallAcceptedByPeer()
+                                webRtcCallManager.onCallAcceptedByPeer()
                             }
                             "call_reject", "call_hangup" -> {
-                                voiceCallManager.rejectOrEndCall()
+                                webRtcCallManager.rejectOrEndCall()
                             }
-                            "voice_audio" -> {
-                                val audioData = if (jsonObj.has("audioData") && !jsonObj.get("audioData").isJsonNull) jsonObj.get("audioData").asString else ""
-                                val callerDeviceId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
-                                if (callerDeviceId != getDeviceId() && audioData.isNotEmpty()) {
-                                    voiceCallManager.onAudioChunkReceived(audioData)
+                            "webrtc_offer" -> {
+                                val sdp = if (jsonObj.has("sdp") && !jsonObj.get("sdp").isJsonNull) jsonObj.get("sdp").asString else ""
+                                if (sdp.isNotEmpty()) {
+                                    webRtcCallManager.onWebRtcOfferReceived(sdp)
+                                }
+                            }
+                            "webrtc_answer" -> {
+                                val sdp = if (jsonObj.has("sdp") && !jsonObj.get("sdp").isJsonNull) jsonObj.get("sdp").asString else ""
+                                if (sdp.isNotEmpty()) {
+                                    webRtcCallManager.onWebRtcAnswerReceived(sdp)
+                                }
+                            }
+                            "webrtc_ice" -> {
+                                val sdpMid = if (jsonObj.has("sdpMid") && !jsonObj.get("sdpMid").isJsonNull) jsonObj.get("sdpMid").asString else ""
+                                val sdpMLineIndex = if (jsonObj.has("sdpMLineIndex") && !jsonObj.get("sdpMLineIndex").isJsonNull) jsonObj.get("sdpMLineIndex").asInt else 0
+                                val candidate = if (jsonObj.has("candidate") && !jsonObj.get("candidate").isJsonNull) jsonObj.get("candidate").asString else ""
+                                if (candidate.isNotEmpty()) {
+                                    webRtcCallManager.onIceCandidateReceived(sdpMid, sdpMLineIndex, candidate)
                                 }
                             }
                         }
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("SosRepository", "Error handling custom json signaling: ${e.message}")
+                android.util.Log.e("SosRepository", "Error handling WebRTC signaling: ${e.message}")
             }
         }
 
@@ -330,7 +334,7 @@ class SosRepository(private val context: Context) {
 
     fun startVoiceCall(peerName: String, peerDeviceId: String = "") {
         val callId = UUID.randomUUID().toString()
-        voiceCallManager.startOutgoingCall(callId, peerName, peerDeviceId)
+        webRtcCallManager.startOutgoingCall(callId, peerName, peerDeviceId)
         webSocketManager.sendCustomJson(
             mapOf(
                 "type" to "call_offer",
@@ -343,35 +347,11 @@ class SosRepository(private val context: Context) {
     }
 
     fun acceptVoiceCall() {
-        val session = voiceCallManager.currentSession.value
-        voiceCallManager.acceptIncomingCall()
-        if (session != null) {
-            webSocketManager.sendCustomJson(
-                mapOf(
-                    "type" to "call_answer",
-                    "callId" to session.callId,
-                    "targetRecipient" to session.peerName,
-                    "senderName" to getUserName(),
-                    "senderDeviceId" to getDeviceId()
-                )
-            )
-        }
+        webRtcCallManager.acceptIncomingCall()
     }
 
     fun rejectOrEndVoiceCall() {
-        val session = voiceCallManager.currentSession.value
-        voiceCallManager.rejectOrEndCall()
-        if (session != null) {
-            webSocketManager.sendCustomJson(
-                mapOf(
-                    "type" to "call_hangup",
-                    "callId" to session.callId,
-                    "targetRecipient" to session.peerName,
-                    "senderName" to getUserName(),
-                    "senderDeviceId" to getDeviceId()
-                )
-            )
-        }
+        webRtcCallManager.rejectOrEndCall()
     }
 
     fun clearHistory() {
