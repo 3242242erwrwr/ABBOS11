@@ -66,6 +66,7 @@ fun VideoNoteRecorderDialog(
     var isRecording by remember { mutableStateOf(false) }
     var recDurationSeconds by remember { mutableStateOf(0) }
     var isFrontCamera by remember { mutableStateOf(true) }
+    var statusMessage by remember { mutableStateOf("") }
 
     var cameraInstance by remember { mutableStateOf<Camera?>(null) }
     var mediaRecorderInstance by remember { mutableStateOf<MediaRecorder?>(null) }
@@ -79,7 +80,6 @@ fun VideoNoteRecorderDialog(
                 delay(1000)
                 recDurationSeconds += 1
                 if (recDurationSeconds >= 60) {
-                    // Stop at 60s max
                     isRecording = false
                 }
             }
@@ -143,11 +143,7 @@ fun VideoNoteRecorderDialog(
                                     override fun surfaceCreated(holder: SurfaceHolder) {
                                         surfaceHolderInstance = holder
                                         try {
-                                            val cameraId = if (isFrontCamera) {
-                                                getFrontCameraId()
-                                            } else {
-                                                Camera.CameraInfo.CAMERA_FACING_BACK
-                                            }
+                                            val cameraId = if (isFrontCamera) getFrontCameraId() else Camera.CameraInfo.CAMERA_FACING_BACK
                                             cameraInstance = Camera.open(cameraId).apply {
                                                 setDisplayOrientation(90)
                                                 setPreviewDisplay(holder)
@@ -155,6 +151,7 @@ fun VideoNoteRecorderDialog(
                                             }
                                         } catch (e: Exception) {
                                             Log.e("VideoNoteRecorder", "Error opening camera: ${e.message}")
+                                            statusMessage = "Kamera ochishda xatolik: ${e.message}"
                                         }
                                     }
 
@@ -217,6 +214,15 @@ fun VideoNoteRecorderDialog(
                     }
                 }
 
+                if (statusMessage.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = statusMessage,
+                        color = EmergencyRed,
+                        fontSize = 11.sp
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // RECORD & SEND BUTTONS
@@ -230,19 +236,22 @@ fun VideoNoteRecorderDialog(
                             onClick = {
                                 try {
                                     val cam = cameraInstance ?: return@Button
-                                    cam.unlock()
+                                    val cameraId = if (isFrontCamera) getFrontCameraId() else Camera.CameraInfo.CAMERA_FACING_BACK
 
+                                    cam.unlock()
                                     recordedFile = File.createTempFile("videonote_", ".mp4", context.cacheDir)
+
+                                    val profile = if (CamcorderProfile.hasProfile(cameraId, CamcorderProfile.QUALITY_480P)) {
+                                        CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_480P)
+                                    } else {
+                                        CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
+                                    }
+
                                     mediaRecorderInstance = MediaRecorder().apply {
                                         setCamera(cam)
                                         setAudioSource(MediaRecorder.AudioSource.MIC)
                                         setVideoSource(MediaRecorder.VideoSource.CAMERA)
-                                        setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                                        setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                                        setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-                                        setVideoEncodingBitRate(1000000)
-                                        setVideoFrameRate(24)
-                                        setVideoSize(480, 480)
+                                        setProfile(profile)
                                         setOrientationHint(if (isFrontCamera) 270 else 90)
                                         setOutputFile(recordedFile?.absolutePath)
                                         surfaceHolderInstance?.let { setPreviewDisplay(it.surface) }
@@ -250,8 +259,11 @@ fun VideoNoteRecorderDialog(
                                         start()
                                     }
                                     isRecording = true
+                                    statusMessage = ""
                                 } catch (e: Exception) {
                                     Log.e("VideoNoteRecorder", "Error starting video recording: ${e.message}")
+                                    statusMessage = "Yozishda xatolik: ${e.message}"
+                                    isRecording = false
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
