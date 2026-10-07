@@ -313,10 +313,9 @@ fun SosHomeScreen(
                                 viewModel.cancelVoiceNoteRecording()
                             },
                             onOpenVideoNoteRecorder = {
-                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-                                    && ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                                    showVideoRecorderDialog = true
-                                } else {
+                                showVideoRecorderDialog = true
+                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                                    || ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                                     cameraAndMicPermissionLauncher.launch(
                                         arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
                                     )
