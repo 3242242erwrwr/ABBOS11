@@ -304,6 +304,7 @@ class SosRepository(private val context: Context) {
     }
 
     fun sendSos(messageText: String, targetRecipient: String = "BARCHAGA") {
+        sendTypingStatus("idle", targetRecipient)
         val currentSender = getUserName()
         val myDeviceId = getDeviceId()
 
@@ -433,6 +434,7 @@ class SosRepository(private val context: Context) {
     }
 
     fun sendVoiceNote(targetRecipient: String = "BARCHAGA") {
+        sendTypingStatus("idle", targetRecipient)
         val base64Audio = voiceNoteManager.stopRecordingAndGetBase64()
         if (!base64Audio.isNullOrBlank()) {
             val currentSender = getUserName()
