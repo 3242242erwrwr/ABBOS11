@@ -74,6 +74,7 @@ class SosRepository(private val context: Context) {
 
     private val processedMessageIds = HashSet<String>()
     private var typingJob: kotlinx.coroutines.Job? = null
+    private var mutedTypingSender: String? = null
     @Volatile
     var lastReceivedTimestamp: Long = System.currentTimeMillis() - 86400000L
     @Volatile
@@ -104,6 +105,17 @@ class SosRepository(private val context: Context) {
                             val status = if (jsonObj.has("status") && !jsonObj.get("status").isJsonNull) jsonObj.get("status").asString else "idle"
                             val target = if (jsonObj.has("targetRecipient") && !jsonObj.get("targetRecipient").isJsonNull) jsonObj.get("targetRecipient").asString.trim() else ""
                             val senderDevId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
+
+                            if (status == "idle") {
+                                if (mutedTypingSender.equals(sender, ignoreCase = true)) {
+                                    mutedTypingSender = null
+                                }
+                                return@setOnCustomJsonReceivedListener
+                            }
+
+                            if (mutedTypingSender != null && mutedTypingSender.equals(sender, ignoreCase = true)) {
+                                return@setOnCustomJsonReceivedListener // Muted after dismiss!
+                            }
 
                             val myName = getUserName().trim()
                             val isForMe = target.isEmpty()
@@ -182,7 +194,8 @@ class SosRepository(private val context: Context) {
 
     @Synchronized
     fun processIncomingSosMessage(sosMessage: SosMessage) {
-        // Stop typing indicator immediately when message arrives!
+        // Stop typing indicator and mute sender when real message arrives!
+        mutedTypingSender = null
         _peerTypingStatus.value = null
         _typingSenderName.value = null
         _typingStatusType.value = null
@@ -281,6 +294,7 @@ class SosRepository(private val context: Context) {
 
     fun dismissActiveAlert() {
         lastMutedTimestamp = System.currentTimeMillis()
+        mutedTypingSender = _typingSenderName.value
         _activeIncomingAlert.value = null
         _peerTypingStatus.value = null
         _typingSenderName.value = null
