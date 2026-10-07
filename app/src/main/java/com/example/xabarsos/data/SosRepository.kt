@@ -420,34 +420,6 @@ class SosRepository(private val context: Context) {
         }
     }
 
-    fun sendVideoNote(base64Video: String, targetRecipient: String = "BARCHAGA") {
-        if (base64Video.isNotBlank()) {
-            val currentSender = getUserName()
-            val myDeviceId = getDeviceId()
-            val formattedTarget = targetRecipient.trim().ifEmpty { "BARCHAGA" }
-
-            val sosMessage = SosMessage(
-                senderName = currentSender,
-                deviceId = myDeviceId,
-                messageText = "📹 DOIRA VIDEO XABAR",
-                targetRecipient = formattedTarget,
-                channel = MessageChannel.INTERNET,
-                isIncoming = false,
-                videoData = base64Video
-            )
-
-            processedMessageIds.add(sosMessage.id)
-
-            val currentList = _messages.value.toMutableList()
-            currentList.add(0, sosMessage)
-            _messages.value = currentList
-
-            webSocketManager.connect()
-            webSocketManager.sendSosMessage(sosMessage)
-            bluetoothManager.broadcastSosOffline(currentSender, myDeviceId, formattedTarget, "📹 DOIRA VIDEO XABAR")
-        }
-    }
-
     fun clearHistory() {
         lastClearedTimestamp = System.currentTimeMillis()
         prefs.edit().putLong("last_cleared_ts", lastClearedTimestamp).apply()

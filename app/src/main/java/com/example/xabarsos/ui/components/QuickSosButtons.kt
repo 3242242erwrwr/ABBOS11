@@ -25,7 +25,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -63,7 +62,6 @@ fun QuickSosButtons(
     onStartVoiceNoteRecording: () -> Unit = {},
     onStopVoiceNoteAndSend: () -> Unit = {},
     onCancelVoiceNoteRecording: () -> Unit = {},
-    onOpenVideoNoteRecorder: () -> Unit = {},
     onSendTypingStatus: (String) -> Unit = {},
     onOpenAddFriendDialog: () -> Unit = {},
     onShowSelectFriendPrompt: () -> Unit = {},
@@ -441,41 +439,12 @@ fun QuickSosButtons(
                         ),
                         modifier = Modifier
                             .height(44.dp)
-                            .width(42.dp)
+                            .width(44.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Mic,
                             contentDescription = "Galasavoy (Ovozli Xabar)",
                             tint = Color.Black,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    // VIDEO NOTE BUTTON (📹 Video Xabar)
-                    Button(
-                        onClick = {
-                            if (selectedRecipient.isBlank()) {
-                                onShowSelectFriendPrompt()
-                            } else {
-                                onOpenVideoNoteRecorder()
-                            }
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(0.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF00B0FF),
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier
-                            .height(44.dp)
-                            .width(42.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Videocam,
-                            contentDescription = "Video Xabar",
-                            tint = Color.White,
                             modifier = Modifier.size(18.dp)
                         )
                     }

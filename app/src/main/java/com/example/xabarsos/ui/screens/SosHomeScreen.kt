@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Button
@@ -71,8 +70,6 @@ import com.example.xabarsos.ui.components.QuickSosButtons
 import com.example.xabarsos.ui.components.SelectFriendPromptDialog
 import com.example.xabarsos.ui.components.SettingsDialog
 import com.example.xabarsos.ui.components.SosAlertBanner
-import com.example.xabarsos.ui.components.VideoNotePlayerDialog
-import com.example.xabarsos.ui.components.VideoNoteRecorderDialog
 import com.example.xabarsos.ui.theme.DarkCardContainer
 import com.example.xabarsos.ui.theme.EmergencyRed
 import com.example.xabarsos.ui.theme.NeonGreen
@@ -108,20 +105,6 @@ fun SosHomeScreen(
     }
 
     var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
-    var showVideoRecorderDialog by remember { mutableStateOf(false) }
-    var activeVideoPlayData by remember { mutableStateOf<Pair<String, String>?>(null) }
-
-    val cameraAndMicPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val cameraGranted = permissions[Manifest.permission.CAMERA] == true
-        val audioGranted = permissions[Manifest.permission.RECORD_AUDIO] == true
-        if (cameraGranted && audioGranted) {
-            showVideoRecorderDialog = true
-        } else {
-            showMicrophonePermissionDialog = true
-        }
-    }
 
     val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -252,9 +235,6 @@ fun SosHomeScreen(
                         sosMessage = alert,
                         isPlayingVoiceNote = isPlayingVoiceNote,
                         onPlayVoiceNote = { audioData -> viewModel.playVoiceNote(audioData) },
-                        onPlayVideoNote = { videoData, senderName ->
-                            activeVideoPlayData = Pair(videoData, senderName)
-                        },
                         onDismiss = { viewModel.dismissActiveAlert() }
                     )
                 }
@@ -315,15 +295,6 @@ fun SosHomeScreen(
                             onCancelVoiceNoteRecording = {
                                 viewModel.cancelVoiceNoteRecording()
                             },
-                            onOpenVideoNoteRecorder = {
-                                showVideoRecorderDialog = true
-                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                                    || ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                                    cameraAndMicPermissionLauncher.launch(
-                                        arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
-                                    )
-                                }
-                            },
                             onSendTypingStatus = { status ->
                                 viewModel.sendTypingStatus(status, selectedRecipient)
                             },
@@ -383,9 +354,6 @@ fun SosHomeScreen(
         MessagesHistoryDialog(
             messages = messages,
             onPlayVoiceNote = { audioData -> viewModel.playVoiceNote(audioData) },
-            onPlayVideoNote = { videoData, senderName ->
-                activeVideoPlayData = Pair(videoData, senderName)
-            },
             onDeleteSingleMessage = { messageId -> viewModel.deleteMessageById(messageId) },
             onClearHistory = { viewModel.clearHistory() },
             onDismiss = { showMessagesMenuDialog = false }
@@ -451,7 +419,6 @@ fun SosHomeScreen(
 fun SosMessageCard(
     message: SosMessage,
     onPlayVoiceNote: ((String) -> Unit)? = null,
-    onPlayVideoNote: ((String, String) -> Unit)? = null,
     onDeleteMessage: (() -> Unit)? = null
 ) {
     val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -551,34 +518,6 @@ fun SosMessageCard(
                     )
                 }
             }
-
-            if (!message.videoData.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    onClick = { onPlayVideoNote?.invoke(message.videoData, message.senderName) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00B0FF),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Videocam,
-                        contentDescription = "Video Xabar",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "📹 DOIRA VIDEO XABARNI KO'RISH",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

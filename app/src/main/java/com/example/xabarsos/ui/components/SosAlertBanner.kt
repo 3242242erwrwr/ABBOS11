@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,7 +38,6 @@ fun SosAlertBanner(
     sosMessage: SosMessage,
     isPlayingVoiceNote: Boolean = true,
     onPlayVoiceNote: ((String) -> Unit)? = null,
-    onPlayVideoNote: ((String, String) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     Card(
@@ -118,32 +116,6 @@ fun SosAlertBanner(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "▶️ GALASAVOYNI QAYTA ESHITISH",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            if (!sosMessage.videoData.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(
-                    onClick = { onPlayVideoNote?.invoke(sosMessage.videoData, sosMessage.senderName) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00B0FF),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Videocam,
-                        contentDescription = "Video Xabar",
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "📹 DOIRA VIDEO XABARNI KO'RISH",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
