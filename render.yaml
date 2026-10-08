@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: xabar-sos-uz
+    runtime: node
+    region: frankfurt
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    plan: free
