@@ -105,7 +105,6 @@ fun SosHomeScreen(
     val isPlayingVoiceNote by viewModel.isPlayingVoiceNote.collectAsState()
     val recordingDurationSeconds by viewModel.recordingDurationSeconds.collectAsState()
     val selectedVoiceEffect by viewModel.selectedVoiceEffect.collectAsState()
-    val peerTypingStatus by viewModel.peerTypingStatus.collectAsState()
     val typingSenderName by viewModel.typingSenderName.collectAsState()
     val typingStatusType by viewModel.typingStatusType.collectAsState()
 
@@ -259,33 +258,6 @@ fun SosHomeScreen(
                         onPlayVoiceNote = { audioData -> viewModel.playVoiceNote(audioData) },
                         onDismiss = { viewModel.dismissActiveAlert() }
                     )
-                }
-
-                // Live Peer Typing / Voice Recording Status Badge (Calm & Clean without flashing)
-                peerTypingStatus?.let { statusText ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 6.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF00B0FF).copy(alpha = 0.25f)
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "💬 $statusText",
-                                color = Color(0xFF00B0FF),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
-                            )
-                        }
-                    }
                 }
 
                 LazyColumn(

@@ -181,12 +181,6 @@ fun QuickSosButtons(
                                 val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
                                 val isThisFriendTyping = typingSenderName != null && (typingSenderName.equals(friendName, ignoreCase = true) || typingSenderName.contains(friendName, ignoreCase = true))
 
-                                val cardBgColor = when {
-                                    isThisFriendTyping -> Color(0xFF00E676).copy(alpha = 0.85f) // Calm static green/cyan highlight
-                                    isSelected -> Color(0xFF00B0FF)
-                                    else -> Color(0xFF1E2230)
-                                }
-
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -198,27 +192,29 @@ fun QuickSosButtons(
                                             }
                                         },
                                     colors = CardDefaults.cardColors(
-                                        containerColor = cardBgColor
+                                        containerColor = if (isSelected) Color(0xFF00B0FF) else Color(0xFF1E2230)
                                     ),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
                                     ) {
-                                        val displayLabel = when {
-                                            isThisFriendTyping && typingStatusType == "typing_voice" -> "🎙️ $friendName kelyapti..."
-                                            isThisFriendTyping -> "✏️ $friendName yozmoqda..."
-                                            else -> "👤 $friendName"
-                                        }
-
                                         Text(
-                                            text = displayLabel,
-                                            fontWeight = if (isThisFriendTyping) FontWeight.Black else FontWeight.Bold,
+                                            text = "👤 $friendName",
+                                            fontWeight = FontWeight.Bold,
                                             fontSize = 11.sp,
                                             color = Color.White,
                                             maxLines = 1
                                         )
+
+                                        if (isThisFriendTyping) {
+                                            Text(
+                                                text = if (typingStatusType == "typing_voice") "🎙️ yozmoqda..." else "...",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF00E676)
+                                            )
+                                        }
                                     }
                                 }
                             }
