@@ -1,14 +1,9 @@
 package com.example.xabarsos.ui.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,10 +18,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -100,17 +94,6 @@ fun QuickSosButtons(
             onSendTypingStatus("idle")
         }
     }
-
-    val infiniteTransition = rememberInfiniteTransition(label = "friendFlashing")
-    val friendFlashingAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 0.95f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 320, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "friendFlashingAlpha"
-    )
 
     Card(
         modifier = Modifier
@@ -197,18 +180,12 @@ fun QuickSosButtons(
                             items(friendsList) { friendName ->
                                 val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
                                 val isThisFriendTyping = typingSenderName != null && (typingSenderName.equals(friendName, ignoreCase = true) || typingSenderName.contains(friendName, ignoreCase = true))
-                                val isVoiceTyping = isThisFriendTyping && typingStatusType == "typing_voice"
-                                val flashColor = if (isVoiceTyping) Color(0xFF00E676) else Color(0xFFFF1744)
 
                                 val cardBgColor = when {
-                                    isThisFriendTyping -> flashColor.copy(alpha = friendFlashingAlpha)
+                                    isThisFriendTyping -> Color(0xFF00E676).copy(alpha = 0.85f) // Calm static green/cyan highlight
                                     isSelected -> Color(0xFF00B0FF)
                                     else -> Color(0xFF1E2230)
                                 }
-
-                                val cardBorder = if (isThisFriendTyping) {
-                                    BorderStroke(2.dp, flashColor.copy(alpha = friendFlashingAlpha))
-                                } else null
 
                                 Card(
                                     modifier = Modifier
@@ -223,7 +200,6 @@ fun QuickSosButtons(
                                     colors = CardDefaults.cardColors(
                                         containerColor = cardBgColor
                                     ),
-                                    border = cardBorder,
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Row(
@@ -231,8 +207,8 @@ fun QuickSosButtons(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         val displayLabel = when {
-                                            isThisFriendTyping && typingStatusType == "typing_voice" -> "🎙️ $friendName (Galasavoy...)"
-                                            isThisFriendTyping -> "✏️ $friendName (Yozmoqda...)"
+                                            isThisFriendTyping && typingStatusType == "typing_voice" -> "🎙️ $friendName kelyapti..."
+                                            isThisFriendTyping -> "✏️ $friendName yozmoqda..."
                                             else -> "👤 $friendName"
                                         }
 
@@ -507,7 +483,7 @@ fun QuickSosButtons(
                         ),
                         modifier = Modifier
                             .height(44.dp)
-                            .width(44.dp)
+                            .width(42.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Mic,

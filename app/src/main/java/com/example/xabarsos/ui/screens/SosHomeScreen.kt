@@ -109,17 +109,6 @@ fun SosHomeScreen(
     val typingSenderName by viewModel.typingSenderName.collectAsState()
     val typingStatusType by viewModel.typingStatusType.collectAsState()
 
-    val infiniteTransition = rememberInfiniteTransition(label = "flashingRed")
-    val flashingRedAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.25f,
-        targetValue = 0.90f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 350, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "redAlpha"
-    )
-
     val availableAppUpdate by viewModel.availableAppUpdate.collectAsState()
     val isDownloadingUpdate by viewModel.isDownloadingUpdate.collectAsState()
     val updateDownloadProgress by viewModel.updateDownloadProgress.collectAsState()
@@ -272,35 +261,28 @@ fun SosHomeScreen(
                     )
                 }
 
-                // Live Peer Typing / Voice Recording Flashing Status Banner
+                // Live Peer Typing / Voice Recording Status Badge (Calm & Clean without flashing)
                 peerTypingStatus?.let { statusText ->
-                    val isVoice = typingStatusType == "typing_voice"
-                    val bannerColor = if (isVoice) Color(0xFF00E676) else Color(0xFFFF1744)
-
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 6.dp)
-                            .border(
-                                BorderStroke(2.dp, bannerColor.copy(alpha = flashingRedAlpha)),
-                                shape = RoundedCornerShape(12.dp)
-                            ),
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = bannerColor.copy(alpha = flashingRedAlpha * 0.35f)
+                            containerColor = Color(0xFF00B0FF).copy(alpha = 0.25f)
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(10.dp)
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "🚨 $statusText",
-                                color = Color.White,
-                                fontWeight = FontWeight.Black,
-                                fontSize = 14.sp
+                                text = "💬 $statusText",
+                                color = Color(0xFF00B0FF),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
                             )
                         }
                     }
