@@ -44,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -182,6 +184,12 @@ fun QuickSosButtons(
                             items(friendsList) { friendName ->
                                 val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
                                 val isThisFriendTyping = typingSenderName != null && (typingSenderName.equals(friendName, ignoreCase = true) || typingSenderName.contains(friendName, ignoreCase = true))
+                                val isVoiceTyping = isThisFriendTyping && typingStatusType == "typing_voice"
+
+                                val cardBgColor = when {
+                                    isSelected -> Color(0xFF00B0FF)
+                                    else -> Color(0xFF1E2230)
+                                }
 
                                 Card(
                                     modifier = Modifier
@@ -194,8 +202,9 @@ fun QuickSosButtons(
                                             }
                                         },
                                     colors = CardDefaults.cardColors(
-                                        containerColor = if (isSelected) Color(0xFF00B0FF) else Color(0xFF1E2230)
+                                        containerColor = cardBgColor
                                     ),
+                                    border = if (isVoiceTyping) BorderStroke(2.dp, Color(0xFF00E676)) else null,
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Column(
@@ -211,10 +220,10 @@ fun QuickSosButtons(
 
                                         if (isThisFriendTyping) {
                                             Text(
-                                                text = if (typingStatusType == "typing_voice") "🎙️ yozmoqda..." else "...",
+                                                text = if (isVoiceTyping) "🎙️ yozmoqda..." else "...",
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF00E676)
+                                                color = if (isVoiceTyping) Color(0xFF00E676) else Color(0xFF00B0FF)
                                             )
                                         }
                                     }
