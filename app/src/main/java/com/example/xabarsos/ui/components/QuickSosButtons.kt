@@ -185,6 +185,13 @@ fun QuickSosButtons(
                                 val isSelected = selectedRecipient.equals(friendName, ignoreCase = true)
                                 val isThisFriendTyping = typingSenderName != null && (typingSenderName.equals(friendName, ignoreCase = true) || typingSenderName.contains(friendName, ignoreCase = true))
                                 val isVoiceTyping = isThisFriendTyping && typingStatusType == "typing_voice"
+                                val isTextTyping = isThisFriendTyping && typingStatusType == "typing_text"
+
+                                val neonColor = when {
+                                    isVoiceTyping -> Color(0xFF00E676) // Neon Green for Voice
+                                    isTextTyping -> Color(0xFF00B0FF)  // Neon Cyan for Text
+                                    else -> Color.Transparent
+                                }
 
                                 val cardBgColor = when {
                                     isSelected -> Color(0xFF00B0FF)
@@ -204,11 +211,11 @@ fun QuickSosButtons(
                                     colors = CardDefaults.cardColors(
                                         containerColor = cardBgColor
                                     ),
-                                    border = if (isVoiceTyping) BorderStroke(2.dp, Color(0xFF00E676)) else null,
+                                    border = if (isThisFriendTyping) BorderStroke(2.dp, neonColor) else null,
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
                                     ) {
                                         Text(
                                             text = "👤 $friendName",
@@ -217,15 +224,6 @@ fun QuickSosButtons(
                                             color = Color.White,
                                             maxLines = 1
                                         )
-
-                                        if (isThisFriendTyping) {
-                                            Text(
-                                                text = if (isVoiceTyping) "🎙️ yozmoqda..." else "...",
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (isVoiceTyping) Color(0xFF00E676) else Color(0xFF00B0FF)
-                                            )
-                                        }
                                     }
                                 }
                             }
