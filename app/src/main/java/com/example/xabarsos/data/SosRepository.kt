@@ -79,6 +79,8 @@ class SosRepository(private val context: Context) {
     @Volatile
     private var lastMessageReceivedTime: Long = 0L
     @Volatile
+    private var lastTypingEventTimestamp: Long = 0L
+    @Volatile
     var lastReceivedTimestamp: Long = System.currentTimeMillis() - 86400000L
     @Volatile
     private var lastMutedTimestamp: Long = 0L
@@ -112,8 +114,14 @@ class SosRepository(private val context: Context) {
                             val status = if (jsonObj.has("status") && !jsonObj.get("status").isJsonNull) jsonObj.get("status").asString else "idle"
                             val target = if (jsonObj.has("targetRecipient") && !jsonObj.get("targetRecipient").isJsonNull) jsonObj.get("targetRecipient").asString.trim() else ""
                             val senderDevId = if (jsonObj.has("senderDeviceId") && !jsonObj.get("senderDeviceId").isJsonNull) jsonObj.get("senderDeviceId").asString else ""
+                            val eventTs = if (jsonObj.has("timestamp") && !jsonObj.get("timestamp").isJsonNull) jsonObj.get("timestamp").asLong else 0L
+
+                            if (eventTs < lastTypingEventTimestamp) {
+                                return@setOnCustomJsonReceivedListener // Ignore out-of-order older packets!
+                            }
 
                             if (status == "idle") {
+                                lastTypingEventTimestamp = eventTs
                                 isUserDismissedTyping = false
                                 _peerTypingStatus.value = null
                                 _typingSenderName.value = null
@@ -129,6 +137,7 @@ class SosRepository(private val context: Context) {
                                     || target.contains(myName, ignoreCase = true)
 
                             if (senderDevId != getDeviceId() && isForMe) {
+                                lastTypingEventTimestamp = eventTs
                                 typingJob?.cancel()
                                 when (status) {
                                     "typing_text" -> {
@@ -357,6 +366,7 @@ class SosRepository(private val context: Context) {
             "senderName" to getUserName(),
             "senderDeviceId" to getDeviceId(),
             "targetRecipient" to targetRecipient,
+            "timestamp" to System.currentTimeMillis(),
             "messageText" to "TYPING_STATUS_$status"
         )
         webSocketManager.sendCustomJson(payload)
