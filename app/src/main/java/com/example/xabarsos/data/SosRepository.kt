@@ -106,7 +106,7 @@ class SosRepository(private val context: Context) {
                             }
                         }
                         "typing_status" -> {
-                            if (isUserDismissedTyping || System.currentTimeMillis() - lastMessageReceivedTime < 4000L) {
+                            if (isUserDismissedTyping || System.currentTimeMillis() - lastMessageReceivedTime < 200L) {
                                 return@setOnCustomJsonReceivedListener
                             }
 
