@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -401,6 +402,7 @@ fun QuickSosButtons(
                                 }
                             },
                             singleLine = true,
+                            cursorBrush = SolidColor(Color.White),
                             textStyle = TextStyle(
                                 fontSize = 13.sp,
                                 color = Color.White,
