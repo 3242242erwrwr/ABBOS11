@@ -189,7 +189,7 @@ fun QuickSosButtons(
 
                                 val neonColor = when {
                                     isVoiceTyping -> Color(0xFF00E676) // Neon Green for Voice
-                                    isTextTyping -> Color(0xFF00B0FF)  // Neon Cyan for Text
+                                    isTextTyping -> Color(0xFFFF1744)  // Neon Red for Text
                                     else -> Color.Transparent
                                 }
 
