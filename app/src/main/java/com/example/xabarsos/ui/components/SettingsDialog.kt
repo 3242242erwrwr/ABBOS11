@@ -276,7 +276,7 @@ fun SettingsDialog(
                 OutlinedTextField(
                     value = serverUrl,
                     onValueChange = { serverUrl = it },
-                    placeholder = { Text("https://xabar-sos.onrender.com", color = Color.Gray) },
+                    placeholder = { Text("https://abbos11.onrender.com", color = Color.Gray) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),

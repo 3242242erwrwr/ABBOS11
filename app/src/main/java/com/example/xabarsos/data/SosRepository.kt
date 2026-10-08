@@ -383,14 +383,14 @@ class SosRepository(private val context: Context) {
     }
 
     fun saveServerUrl(url: String) {
-        val trimmed = url.trim().ifEmpty { "https://xabar-sos.onrender.com" }
+        val trimmed = url.trim().ifEmpty { "https://abbos11.onrender.com" }
         prefs.edit().putString("server_url", trimmed).apply()
         _serverUrl.value = trimmed
         webSocketManager.updateServerUrl(trimmed)
     }
 
     fun getServerUrl(): String {
-        return prefs.getString("server_url", "https://xabar-sos.onrender.com") ?: "https://xabar-sos.onrender.com"
+        return prefs.getString("server_url", "https://abbos11.onrender.com") ?: "https://abbos11.onrender.com"
     }
 
     fun saveSoundType(type: SosSoundType) {

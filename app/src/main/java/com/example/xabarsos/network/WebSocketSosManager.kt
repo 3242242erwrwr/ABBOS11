@@ -31,7 +31,7 @@ sealed class ConnectionStatus {
 }
 
 class WebSocketSosManager(
-    private var serverBaseUrl: String = "https://xabar-sos.onrender.com"
+    private var serverBaseUrl: String = "https://abbos11.onrender.com"
 ) {
     // Client for persistent WebSocket with 1s active ping to immediately detect 4G/Wi-Fi socket drops
     private val client = OkHttpClient.Builder()
