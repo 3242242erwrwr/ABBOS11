@@ -73,6 +73,7 @@ fun QuickSosButtons(
     onStopAllAlerts: () -> Unit = {}
 ) {
     var customMessage by remember { mutableStateOf("") }
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
 
     androidx.compose.runtime.LaunchedEffect(isRecordingVoiceNote, selectedRecipient) {
         if (isRecordingVoiceNote && selectedRecipient.isNotBlank()) {
@@ -441,6 +442,7 @@ fun QuickSosButtons(
                                     onSendTypingStatus("idle")
                                     onSendSos(customMessage, selectedRecipient)
                                     customMessage = ""
+                                    focusManager.clearFocus()
                                 }
                             },
                             enabled = customMessage.isNotBlank(),
