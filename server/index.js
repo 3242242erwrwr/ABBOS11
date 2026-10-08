@@ -87,16 +87,13 @@ function saveAndBroadcastSos(messageObj) {
         messageObj.timestamp = Date.now();
     }
 
-    // 1. Broadcast FULL message instantly via WebSocket
+    // Broadcast message with full audio
     broadcastLive(messageObj);
 
-    // 2. For REST polling cache, store a lightweight version (without heavy audioData) to prevent 4G bandwidth choking!
-    const lightObj = { ...messageObj };
-    delete lightObj.audioData;
-
-    recentSosMessages.unshift(lightObj);
-    if (recentSosMessages.length > 50) {
-        recentSosMessages = recentSosMessages.slice(0, 50);
+    // Keep last 30 SOS messages with audio for polling fallback
+    recentSosMessages.unshift(messageObj);
+    if (recentSosMessages.length > 30) {
+        recentSosMessages = recentSosMessages.slice(0, 30);
     }
 }
 
