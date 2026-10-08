@@ -77,6 +77,8 @@ class SosRepository(private val context: Context) {
     @Volatile
     private var isUserDismissedTyping: Boolean = false
     @Volatile
+    private var lastMessageReceivedTime: Long = 0L
+    @Volatile
     var lastReceivedTimestamp: Long = System.currentTimeMillis() - 86400000L
     @Volatile
     private var lastMutedTimestamp: Long = 0L
@@ -102,7 +104,7 @@ class SosRepository(private val context: Context) {
                             }
                         }
                         "typing_status" -> {
-                            if (isUserDismissedTyping) {
+                            if (isUserDismissedTyping || System.currentTimeMillis() - lastMessageReceivedTime < 4000L) {
                                 return@setOnCustomJsonReceivedListener
                             }
 
@@ -197,6 +199,7 @@ class SosRepository(private val context: Context) {
 
     @Synchronized
     fun processIncomingSosMessage(sosMessage: SosMessage) {
+        lastMessageReceivedTime = System.currentTimeMillis()
         // Stop typing indicator and reset mute when real message arrives!
         isUserDismissedTyping = false
         _peerTypingStatus.value = null
