@@ -87,13 +87,17 @@ function saveAndBroadcastSos(messageObj) {
         messageObj.timestamp = Date.now();
     }
 
-    // Keep last 50 SOS messages
-    recentSosMessages.unshift(messageObj);
+    // 1. Broadcast FULL message instantly via WebSocket
+    broadcastLive(messageObj);
+
+    // 2. For REST polling cache, store a lightweight version (without heavy audioData) to prevent 4G bandwidth choking!
+    const lightObj = { ...messageObj };
+    delete lightObj.audioData;
+
+    recentSosMessages.unshift(lightObj);
     if (recentSosMessages.length > 50) {
         recentSosMessages = recentSosMessages.slice(0, 50);
     }
-
-    broadcastLive(messageObj);
 }
 
 // REST API Broadcast
@@ -112,11 +116,9 @@ app.post('/api/sos', (req, res) => {
     return res.status(400).json({ error: 'Invalid payload' });
 });
 
-// REST API Polling Fallback (Get recent SOS messages since timestamp)
+// REST API Polling Fallback (Get recent SOS messages)
 app.get('/api/sos/recent', (req, res) => {
-    const since = parseInt(req.query.since || '0', 10);
-    const newMessages = recentSosMessages.filter(m => (m.timestamp || 0) > since);
-    res.json({ messages: newMessages, serverTime: Date.now() });
+    res.json({ messages: recentSosMessages.slice(0, 20), serverTime: Date.now() });
 });
 
 app.get('/', (req, res) => {
